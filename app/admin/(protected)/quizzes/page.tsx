@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { AdminNavbar } from "@/components/admin-navbar"
+import { ParticleBackground } from "@/components/particle-background"
 
 type Option = { id: string; text: string; isCorrect: boolean }
 type Question = { id: string; text: string; options: Option[] }
@@ -127,8 +128,10 @@ export default function AdminQuizzesPage() {
   }
 
   return (
-    <main className="mx-auto max-w-5xl px-4 pt-24 pb-8">
+    <main className="relative min-h-screen">
       <AdminNavbar />
+      <ParticleBackground />
+      <div className="mx-auto max-w-5xl px-4 pt-28 pb-8">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Create Quiz</h1>
         <Button asChild variant="outline">
@@ -252,6 +255,7 @@ export default function AdminQuizzesPage() {
           </ul>
         )}
       </Card>
+      </div>
     </main>
   )
 }

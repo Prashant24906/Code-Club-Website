@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { AdminNavbar } from "@/components/admin-navbar"
+import { ParticleBackground } from "@/components/particle-background"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import {
   AlertDialog,
@@ -257,8 +258,10 @@ export default function EventsAdminPage() {
     ratio === "square" ? { w: 1080, h: 1080 } : { w: 1080, h: 1440 }
 
   return (
-    <main className="mx-auto max-w-5xl px-4 pt-24 pb-8">
+    <main className="relative min-h-screen">
       <AdminNavbar />
+      <ParticleBackground />
+      <div className="mx-auto max-w-5xl px-4 pt-28 pb-8">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Edit Events</h1>
         <Button asChild variant="outline">
@@ -795,6 +798,7 @@ export default function EventsAdminPage() {
           </AlertFooter>
         </AlertDialogContent>
       </AlertDialog>
+      </div>
     </main>
   )
 }

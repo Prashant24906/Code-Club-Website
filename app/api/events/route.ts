@@ -1,5 +1,6 @@
 import { connectDB } from "@/lib/mongodb";
 import Event from "@/models/events";
+import { checkAuth } from "@/lib/auth-check";
 
 export async function GET() {
   await connectDB();
@@ -8,6 +9,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const authErr = await checkAuth();
+  if (authErr) return authErr;
+
   await connectDB();
   const data = await request.json();
   const event = await Event.create(data);
@@ -15,6 +19,9 @@ export async function POST(request: Request) {
 }
 
 export async function PUT(request: Request) {
+  const authErr = await checkAuth();
+  if (authErr) return authErr;
+
   await connectDB();
   const { id, ...data } = await request.json();
   const updated = await Event.findByIdAndUpdate(id, data, { new: true });
@@ -22,6 +29,9 @@ export async function PUT(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const authErr = await checkAuth();
+  if (authErr) return authErr;
+
   await connectDB();
   const { id } = await request.json();
   await Event.findByIdAndDelete(id);

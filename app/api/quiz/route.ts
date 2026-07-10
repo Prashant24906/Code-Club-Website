@@ -1,5 +1,6 @@
 import { connectDB } from "@/lib/mongodb";
 import Quiz from "@/models/quiz";
+import { checkAuth } from "@/lib/auth-check";
 
 export async function GET() {
   await connectDB();
@@ -8,6 +9,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const authErr = await checkAuth();
+  if (authErr) return authErr;
+
   await connectDB();
   const data = await request.json();
   const quiz = await Quiz.create(data);
@@ -15,6 +19,9 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const authErr = await checkAuth();
+  if (authErr) return authErr;
+
   await connectDB();
   const { id } = await request.json();
   await Quiz.findByIdAndDelete(id);
