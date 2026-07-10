@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { Users } from "lucide-react";
+import { Users, UserX } from "lucide-react";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -12,14 +12,15 @@ type Department = { name: string; lead: Member | null; members: Member[]; color:
 
 export function Members() {
   const [members, setMembers] = useState<Member[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     fetch("/api/members")
       .then((res) => res.json())
-      .then((data) => setMembers(data))
-      .catch(() => setError(true));
+      .then((data) => { setMembers(data); setLoading(false); })
+      .catch(() => { setError(true); setLoading(false); });
   }, []);
 
   useEffect(() => {
@@ -38,7 +39,47 @@ export function Members() {
   }, [members]);
 
   if (error) return <p className="text-center mt-10">Failed to load members.</p>;
-  if (!members.length) return <p className="text-center mt-10 text-muted-foreground">Loading members...</p>;
+
+  if (loading) return (
+    <section className="py-20 px-4">
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center mb-16">
+          <div className="h-12 w-72 bg-muted/40 rounded-xl mx-auto mb-4 animate-pulse" />
+          <div className="h-5 w-96 bg-muted/30 rounded-lg mx-auto animate-pulse" />
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-w-5xl mx-auto">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="glass-card rounded-2xl p-4 animate-pulse">
+              <div className="w-24 h-24 rounded-xl bg-muted/40 mx-auto mb-3" />
+              <div className="h-4 bg-muted/40 rounded mx-auto w-3/4 mb-2" />
+              <div className="h-3 bg-muted/30 rounded mx-auto w-1/2" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+
+  if (!members.length) return (
+    <section className="py-20 px-4">
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-foreground">Meet Our <span className="gradient-text">Team</span></h2>
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto text-pretty">Passionate individuals driving innovation and fostering a collaborative learning environment</p>
+        </div>
+        <div className="flex flex-col items-center justify-center py-24 glass-card rounded-3xl border border-dashed border-white/20">
+          <div className="w-20 h-20 rounded-full flex items-center justify-center mb-6"
+            style={{ background: "linear-gradient(135deg, var(--accent-blue), var(--accent-indigo))" }}>
+            <UserX className="h-10 w-10 text-white" />
+          </div>
+          <h3 className="text-2xl font-bold text-foreground mb-3">No Members Yet</h3>
+          <p className="text-muted-foreground text-center max-w-sm">
+            The team roster is being set up. Check back soon to meet the people behind CoDE Club.
+          </p>
+        </div>
+      </div>
+    </section>
+  );
 
   const executiveTeam = members.filter((m) => m.department === "Core Leadership");
   const president = executiveTeam.find((m) => /president|predident/i.test(m.role)) ?? executiveTeam.find((m) => m.isHead) ?? executiveTeam[0] ?? null;

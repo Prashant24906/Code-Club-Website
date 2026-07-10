@@ -6,11 +6,13 @@ import { Button } from "@/components/ui/button"
 import { Menu, X, Moon, Sun } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [isDark, setIsDark] = useState(true)
+  const pathname = usePathname()
   const navRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
@@ -39,12 +41,14 @@ export function Navbar() {
   }
 
   const navItems = [
-    { name: "About", href: "#about" },
-    { name: "Members", href: "#members" },
-    { name: "Events", href: "#events" },
+    { name: "About", href: "/about" },
+    { name: "Members", href: "/members" },
+    { name: "Events", href: "/events" },
     { name: "Quiz", href: "/quiz" },
-    { name: "Contact", href: "#contact" },
+    { name: "Contact", href: "/contact" },
   ]
+
+  const isActive = (href: string) => pathname === href
 
   return (
     <nav
@@ -66,7 +70,11 @@ export function Navbar() {
             <Link
               key={item.name}
               href={item.href}
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200 hover:scale-105 transform"
+              className={`text-sm font-medium transition-colors duration-200 hover:scale-105 transform ${
+                isActive(item.href)
+                  ? "text-foreground font-semibold"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
             >
               {item.name}
             </Link>
@@ -95,7 +103,11 @@ export function Navbar() {
             <Link
               key={item.name}
               href={item.href}
-              className="block py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              className={`block py-2 text-sm font-medium transition-colors ${
+                isActive(item.href)
+                  ? "text-foreground font-semibold"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
               onClick={() => setIsOpen(false)}
             >
               {item.name}
