@@ -1,6 +1,7 @@
 import { Navbar } from "@/components/navbar";
 import { Contact } from "@/components/contact";
 import { ParticleBackground } from "@/components/particle-background";
+import { PageHero } from "@/components/page-hero";
 
 export const metadata = {
   title: "Contact | CoDE Club",
@@ -12,9 +13,16 @@ export default function ContactPage() {
     <main className="relative min-h-screen">
       <ParticleBackground />
       <Navbar />
-      <div className="pt-24">
+      <div className="pt-20">
+        <PageHero
+          title="Get in"
+          highlight="Touch"
+          subtitle="Have questions? Want to join our community? We'd love to hear from you!"
+          badge="Contact Us"
+        />
         <Contact />
       </div>
     </main>
   );
 }
+

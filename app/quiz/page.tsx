@@ -7,7 +7,8 @@ import { Card } from "@/components/ui/card"
 import { Brain, Trophy, Clock, Users, Play, ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import { ParticleBackground } from "@/components/particle-background"
-
+import { Navbar } from "@/components/navbar"
+import { PageHero } from "@/components/page-hero"
 type Option = { id: string; text: string; isCorrect: boolean }
 type Question = { id: string; text: string; options: Option[] }
 type Quiz = { _id?: string; id?: string; title: string; description?: string; questions: Question[] }
@@ -90,16 +91,22 @@ export default function QuizPage() {
     return (
       <main className="relative min-h-screen">
         <ParticleBackground />
-        <div className="container mx-auto px-4 py-20">
-          <div ref={containerRef} className="max-w-2xl mx-auto text-center">
-            <Link href="/" className="inline-flex items-center text-purple-400 hover:text-purple-300 mb-8 transition-colors">
-              <ArrowLeft className="h-4 w-4 mr-2" />Back to Home
-            </Link>
+        <Navbar />
+        <div className="pt-20">
+          <PageHero
+            title="Test Your"
+            highlight="Skills"
+            subtitle="Participate in our regular coding quizzes and see where you stand."
+            badge="Quiz"
+          />
+          <div className="container mx-auto px-4 pb-20">
+            <div ref={containerRef} className="max-w-2xl mx-auto text-center mt-8">
             <div className="glass-card rounded-3xl p-12">
               <Brain className="h-16 w-16 text-gray-500 mx-auto mb-6" />
               <h1 className="text-4xl font-bold mb-4 text-foreground">Quiz Section</h1>
               <p className="text-muted-foreground text-lg mb-6">The quiz section is currently not available. Please check back later.</p>
               <div className="text-sm text-muted-foreground">Quiz access is controlled by the admin panel.</div>
+            </div>
             </div>
           </div>
         </div>
@@ -110,15 +117,16 @@ export default function QuizPage() {
   return (
     <main className="relative min-h-screen">
       <ParticleBackground />
-      <div className="container mx-auto px-4 py-20">
-        <div ref={containerRef} className="max-w-6xl mx-auto">
-          <div className="flex items-center justify-between mb-12">
-            <Link href="/" className="inline-flex items-center text-purple-400 hover:text-purple-300 transition-colors">
-              <ArrowLeft className="h-4 w-4 mr-2" />Back to Home
-            </Link>
-            <h1 className="text-4xl md:text-5xl font-bold text-center">Test Your <span className="gradient-text">Skills</span></h1>
-            <div></div>
-          </div>
+      <Navbar />
+      <div className="pt-20">
+        <PageHero
+          title="Test Your"
+          highlight="Skills"
+          subtitle="Participate in our regular coding quizzes and see where you stand."
+          badge="Quiz"
+        />
+        <div className="container mx-auto px-4 pb-20">
+          <div ref={containerRef} className="max-w-6xl mx-auto mt-8">
 
           {!showRegistration && !showQuiz && !showResults && !selectedQuiz && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
@@ -224,6 +232,7 @@ export default function QuizPage() {
           )}
         </div>
       </div>
-    </main>
+    </div>
+  </main>
   )
 }

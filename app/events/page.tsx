@@ -1,6 +1,7 @@
 import { Navbar } from "@/components/navbar";
 import { Events } from "@/components/events";
 import { ParticleBackground } from "@/components/particle-background";
+import { PageHero } from "@/components/page-hero";
 
 export const metadata = {
   title: "Events | CoDE Club",
@@ -12,9 +13,16 @@ export default function EventsPage() {
     <main className="relative min-h-screen">
       <ParticleBackground />
       <Navbar />
-      <div className="pt-24">
+      <div className="pt-20">
+        <PageHero
+          title="Our"
+          highlight="Events"
+          subtitle="Join us for workshops, hackathons, tech talks, and networking events."
+          badge="What's Happening"
+        />
         <Events />
       </div>
     </main>
   );
 }
+
