@@ -7,21 +7,21 @@ export async function GET() {
   return new Response(JSON.stringify(members), { status: 200 });
 }
 
-export async function POST(request) {
+export async function POST(request: Request) {
   await connectDB();
   const data = await request.json();
   const member = await Member.create(data);
   return new Response(JSON.stringify(member), { status: 201 });
 }
 
-export async function PUT(request) {
+export async function PUT(request: Request) {
   await connectDB();
   const { id, ...data } = await request.json();
   const updated = await Member.findByIdAndUpdate(id, data, { new: true });
   return new Response(JSON.stringify(updated), { status: 200 });
 }
 
-export async function DELETE(request) {
+export async function DELETE(request: Request) {
   await connectDB();
   const { id } = await request.json();
   await Member.findByIdAndDelete(id);

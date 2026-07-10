@@ -1,26 +1,5 @@
-import { generateReactHelpers } from "@uploadthing/react";
-import type { OurFileRouter } from "@/app/api/uploadthing/core";
-
-export const { useUploadThing, uploadFiles } = generateReactHelpers<OurFileRouter>();
-
-/**
- * Upload an image to UploadThing
- * @param file The image file to upload
- * @returns The URL of the uploaded image
- */
-export async function uploadMemberImage(file: File): Promise<string> {
-  try {
-    const result = await uploadFiles("memberImageUploader", {
-      files: [file],
-    });
-
-    if (result && result.length > 0) {
-      return result[0].url;
-    }
-
-    throw new Error("No upload result returned");
-  } catch (error) {
-    console.error("Error uploading image:", error);
-    throw error;
-  }
+// uploadthing.ts — removed. Images are now stored as base64 data URLs in MongoDB.
+// This file is kept as a stub to avoid import errors during transition.
+export async function uploadMemberImage(_file: File): Promise<string> {
+  throw new Error("UploadThing has been removed. Images are stored as base64 in MongoDB.")
 }

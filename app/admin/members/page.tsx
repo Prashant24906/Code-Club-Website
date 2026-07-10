@@ -18,9 +18,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import ImageCropperDialog from "@/components/image-cropper-dialog"
-import Image from "next/image"
 import Link from "next/link"
-import { uploadMemberImage } from "@/lib/uploadthing"
 
 import { useEffect, useState, useMemo } from "react"
 
@@ -72,13 +70,9 @@ export default function MembersAdminPage() {
   const [editCropSrc, setEditCropSrc] = useState<string | null>(null)
   const [editZoom, setEditZoom] = useState(1)
 
-  const [isUploading, setIsUploading] = useState(false)
-  const [editIsUploading, setEditIsUploading] = useState(false)
-  const [alertState, setAlertState] = useState({
-    open: false,
-    title: "",
-    description: "",
-  })
+  const [isSaving, setIsSaving] = useState(false)
+  const [editIsSaving, setEditIsSaving] = useState(false)
+  const [alertState, setAlertState] = useState({ open: false, title: "", description: "" })
   const openAlert = (title: string, description: string) => {
     setAlertState({ open: true, title, description })
   }
@@ -127,14 +121,9 @@ export default function MembersAdminPage() {
     }
 
     try {
-      setIsUploading(true)
-      // Convert data URL to blob and upload to UploadThing
-      const response = await fetch(image)
-      const blob = await response.blob()
-      const file = new File([blob], "member-image.jpg", { type: "image/jpeg" })
-      const imageUrl = await uploadMemberImage(file)
-
-      const newMember = { name: name.trim(), role: role.trim(), department: finalDept, image: imageUrl, isHead }
+      setIsSaving(true)
+      // Store base64 data URL directly in MongoDB (M-Pulse pattern)
+      const newMember = { name: name.trim(), role: role.trim(), department: finalDept, image, isHead }
 
       const res = await fetch("/api/members", {
         method: "POST",
@@ -146,9 +135,9 @@ export default function MembersAdminPage() {
       resetAddForm()
     } catch (err) {
       console.error("Error adding member:", err)
-      openAlert("Add Member Failed", "Failed to upload image or add member.")
+      openAlert("Add Member Failed", "Failed to add member. Please try again.")
     } finally {
-      setIsUploading(false)
+      setIsSaving(false)
     }
   }
 
@@ -214,17 +203,9 @@ export default function MembersAdminPage() {
     }
 
     try {
-      setEditIsUploading(true)
-      // Check if image is a new data URL (not a URL from UploadThing)
-      let finalImageUrl = eImage
-      if (eImage && eImage.startsWith("data:")) {
-        const response = await fetch(eImage)
-        const blob = await response.blob()
-        const file = new File([blob], "member-image.jpg", { type: "image/jpeg" })
-        finalImageUrl = await uploadMemberImage(file)
-      }
-
-      const updatedMember = { name: eName.trim(), role: eRole.trim(), department: finalDept, image: finalImageUrl, isHead: eIsHead }
+      setEditIsSaving(true)
+      // Store base64 directly (M-Pulse pattern — no upload service)
+      const updatedMember = { name: eName.trim(), role: eRole.trim(), department: finalDept, image: eImage, isHead: eIsHead }
 
       const res = await fetch("/api/members", {
         method: "PUT",
@@ -239,7 +220,7 @@ export default function MembersAdminPage() {
       console.error("Error saving member:", err)
       openAlert("Update Failed", "Failed to update member.")
     } finally {
-      setEditIsUploading(false)
+      setEditIsSaving(false)
     }
   }
 
@@ -291,13 +272,13 @@ export default function MembersAdminPage() {
               <Card key={m._id} className="glass-card p-4">
                 <CardContent className="p-0">
                   <div className="flex items-center gap-3">
-                    <Image
-                      src={m.image}
+                    <img
+                      src={m.image || "/placeholder.svg"}
                       loading="lazy"
                       alt={`${m.name} avatar`}
                       width={64}
                       height={64}
-                      className="rounded-full object-cover"
+                      className="rounded-full object-cover w-16 h-16"
                     />
                     <div className="min-w-0">
                       <div className="truncate font-semibold">{m.name}</div>
@@ -308,12 +289,8 @@ export default function MembersAdminPage() {
                     </div>
                   </div>
                   <div className="mt-4 flex gap-2">
-                    <Button size="sm" variant="secondary" onClick={() => openEditDialog(m)}>
-                      Edit
-                    </Button>
-                    <Button size="sm" variant="destructive" onClick={() => removeMember(m._id)}>
-                      Delete
-                    </Button>
+                    <Button size="sm" variant="secondary" onClick={() => openEditDialog(m)}>Edit</Button>
+                    <Button size="sm" variant="destructive" onClick={() => removeMember(m._id)}>Delete</Button>
                   </div>
                 </CardContent>
               </Card>
@@ -321,6 +298,7 @@ export default function MembersAdminPage() {
           </div>
         )}
       </Card>
+
       {/* Add Member Form */}
       <Card className="glass-card rounded-xl p-6">
         <h2 className="mb-4 text-lg font-semibold">Add Member</h2>
@@ -328,8 +306,8 @@ export default function MembersAdminPage() {
           <div {...getAddRootProps({ className: "mx-auto w-full max-w-sm rounded-lg border-2 border-dashed p-4 text-center cursor-pointer" })}>
             <input {...getAddInputProps()} />
             {image ? (
-              <div className="relative w-56 overflow-hidden rounded-md" style={{ paddingTop: "100%" }}>
-                <Image src={image} alt="Uploaded preview" fill className="absolute inset-0 h-full w-full object-cover" />
+              <div className="relative w-56 overflow-hidden rounded-md mx-auto" style={{ paddingTop: "100%" }}>
+                <img src={image} alt="Uploaded preview" className="absolute inset-0 h-full w-full object-cover" />
               </div>
             ) : (
               <p className="text-sm text-muted-foreground">Drag & drop here, or click to select</p>
@@ -353,19 +331,12 @@ export default function MembersAdminPage() {
               value={addingCustomDept ? "__custom__" : department}
               onValueChange={(v) => {
                 if (v === "__custom__") setAddingCustomDept(true)
-                else {
-                  setAddingCustomDept(false)
-                  setDepartment(v)
-                }
+                else { setAddingCustomDept(false); setDepartment(v) }
               }}
             >
-              <SelectTrigger className="glass">
-                <SelectValue placeholder="Select department" />
-              </SelectTrigger>
+              <SelectTrigger className="glass"><SelectValue placeholder="Select department" /></SelectTrigger>
               <SelectContent>
-                {deptOptions.map((opt) => (
-                  <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                ))}
+                {deptOptions.map((opt) => (<SelectItem key={opt} value={opt}>{opt}</SelectItem>))}
                 <SelectItem value="__custom__">+ Add new department</SelectItem>
               </SelectContent>
             </Select>
@@ -385,8 +356,8 @@ export default function MembersAdminPage() {
         </div>
 
         <div className="mt-4">
-          <Button onClick={addMember} disabled={!canAdd || isUploading} className="bg-cyan-600 hover:bg-cyan-700">
-            {isUploading ? "Uploading..." : "Add Member"}
+          <Button onClick={addMember} disabled={!canAdd || isSaving} className="bg-cyan-600 hover:bg-cyan-700">
+            {isSaving ? "Saving..." : "Add Member"}
           </Button>
         </div>
       </Card>
@@ -395,10 +366,7 @@ export default function MembersAdminPage() {
         open={addCropOpen}
         onOpenChange={setAddCropOpen}
         src={addCropSrc || "/placeholder.svg"}
-        onCropped={(dataUrl) => {
-          setImage(dataUrl ?? "")
-          setAddCropOpen(false)
-        }}
+        onCropped={(dataUrl) => { setImage(dataUrl ?? ""); setAddCropOpen(false) }}
         zoom={addZoom}
         setZoom={setAddZoom}
         aspect={1}
@@ -408,15 +376,13 @@ export default function MembersAdminPage() {
 
       <Dialog open={editOpen} onOpenChange={(v) => !v && setEditOpen(false)}>
         <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Edit Member</DialogTitle>
-          </DialogHeader>
+          <DialogHeader><DialogTitle>Edit Member</DialogTitle></DialogHeader>
           <div className="grid gap-6">
             <div {...getEditRootProps({ className: "mx-auto w-full max-w-sm rounded-lg border-2 border-dashed p-4 text-center cursor-pointer" })}>
               <input {...getEditInputProps()} />
               {eImage ? (
-                <div className="relative w-56 overflow-hidden rounded-md" style={{ paddingTop: "100%" }}>
-                  <Image src={eImage} alt="Uploaded preview" fill className="absolute inset-0 h-full w-full object-cover" />
+                <div className="relative w-56 overflow-hidden rounded-md mx-auto" style={{ paddingTop: "100%" }}>
+                  <img src={eImage} alt="Uploaded preview" className="absolute inset-0 h-full w-full object-cover" />
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground">Drag & drop here, or click to select</p>
@@ -457,7 +423,7 @@ export default function MembersAdminPage() {
 
           <DialogFooter className="mt-4 flex justify-between">
             <Button variant="outline" onClick={() => { setEditOpen(false); resetEditForm() }}>Cancel</Button>
-            <Button onClick={saveEdit} disabled={!canEdit || editIsUploading}>{editIsUploading ? "Saving..." : "Save Changes"}</Button>
+            <Button onClick={saveEdit} disabled={!canEdit || editIsSaving}>{editIsSaving ? "Saving..." : "Save Changes"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -466,20 +432,15 @@ export default function MembersAdminPage() {
         open={editCropOpen}
         onOpenChange={setEditCropOpen}
         src={editCropSrc || "/placeholder.svg"}
-        onCropped={(dataUrl) => {
-          setEImage(dataUrl ?? "")
-          setEditCropOpen(false)
-        }}
+        onCropped={(dataUrl) => { setEImage(dataUrl ?? ""); setEditCropOpen(false) }}
         zoom={editZoom}
         setZoom={setEditZoom}
         aspect={1}
         outputWidth={512}
         outputHeight={512}
       />
-      <AlertDialog
-        open={alertState.open}
-        onOpenChange={(open) => setAlertState((prev) => ({ ...prev, open }))}
-      >
+
+      <AlertDialog open={alertState.open} onOpenChange={(open) => setAlertState((prev) => ({ ...prev, open }))}>
         <AlertDialogContent className="glass-card">
           <AlertDialogHeader>
             <AlertDialogTitle>{alertState.title}</AlertDialogTitle>

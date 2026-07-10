@@ -1,5 +1,5 @@
-import { connectDB } from "../../../lib/mongodb";
-import Event from "../../../models/events";
+import { connectDB } from "@/lib/mongodb";
+import Event from "@/models/events";
 
 export async function GET() {
   await connectDB();
@@ -7,21 +7,21 @@ export async function GET() {
   return new Response(JSON.stringify(events), { status: 200 });
 }
 
-export async function POST(request) {
+export async function POST(request: Request) {
   await connectDB();
   const data = await request.json();
   const event = await Event.create(data);
   return new Response(JSON.stringify(event), { status: 201 });
 }
 
-export async function PUT(request) {
+export async function PUT(request: Request) {
   await connectDB();
   const { id, ...data } = await request.json();
   const updated = await Event.findByIdAndUpdate(id, data, { new: true });
   return new Response(JSON.stringify(updated), { status: 200 });
 }
 
-export async function DELETE(request) {
+export async function DELETE(request: Request) {
   await connectDB();
   const { id } = await request.json();
   await Event.findByIdAndDelete(id);

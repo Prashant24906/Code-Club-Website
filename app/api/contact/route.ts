@@ -1,32 +1,16 @@
-import nodemailer from "nodemailer";
 import { NextRequest, NextResponse } from "next/server";
+import { sendMail } from "@/lib/mailer";
 
 export async function POST(request: NextRequest) {
   try {
     const { firstName, lastName, email, subject, message } = await request.json();
 
-    // Validate required fields
     if (!firstName || !lastName || !email || !subject || !message) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // Create transporter using Gmail
-    const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 587,
-      secure: false,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASSWORD,
-      },
-    });
-
     // Send email to admin
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
+    await sendMail({
       to: "prajyotyt18@gmail.com",
       subject: `New Contact Form Submission: ${subject}`,
       html: `
@@ -40,8 +24,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Send confirmation email to user
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
+    await sendMail({
       to: email,
       subject: "We received your message",
       html: `
@@ -51,19 +34,13 @@ export async function POST(request: NextRequest) {
         <p><strong>Your Message:</strong></p>
         <p>${message.replace(/\n/g, "<br>")}</p>
         <br>
-        <p>Best regards,<br>CODE Club</p>
+        <p>Best regards,<br>CoDE Club</p>
       `,
     });
 
-    return NextResponse.json(
-      { message: "Email sent successfully" },
-      { status: 200 }
-    );
+    return NextResponse.json({ message: "Email sent successfully" }, { status: 200 });
   } catch (error) {
     console.error("Email error:", error);
-    return NextResponse.json(
-      { error: "Failed to send email" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to send email" }, { status: 500 });
   }
 }
