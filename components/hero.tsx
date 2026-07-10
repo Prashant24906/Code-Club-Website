@@ -87,7 +87,8 @@ const slides = [
     icon: Users,
     title: "Collaborate",
     sub: "Build Together",
-    desc: "Team up and ship projects that matter",
+    desc:  `A Club for The Students 
+    by the students and to the students`,
   },
   {
     bg: "from-violet-950 via-purple-950 to-slate-950",
@@ -96,7 +97,8 @@ const slides = [
     icon: Zap,
     title: "Innovate",
     sub: "Push the Limits",
-    desc: "Turn ideas into impactful technology",
+    desc:  `A Club for The Students 
+    by the students and to the students`,
   },
   {
     bg: "from-rose-950 via-pink-950 to-slate-950",
@@ -105,7 +107,8 @@ const slides = [
     icon: ArrowRight,
     title: "Grow",
     sub: "Level Up Daily",
-    desc: "Learn from peers, mentors & hackathons",
+    desc:  `A Club for The Students 
+    by the students and to the students`,
   },
 ]
 
