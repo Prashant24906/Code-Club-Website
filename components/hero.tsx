@@ -397,7 +397,7 @@ export function Hero() {
 
               {/* Mobile CTA */}
               <a
-                href="#events"
+                href="events"
                 className="sm:hidden mb-4 w-full flex items-center justify-center gap-2 rounded-full py-3 px-6 text-sm font-bold text-white shadow-lg transition-transform active:scale-95"
                 style={{
                   background: current.accent,
