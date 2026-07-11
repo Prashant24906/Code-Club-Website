@@ -33,13 +33,10 @@ export function Events() {
   const [pendingFormLink, setPendingFormLink] = useState<string | null>(null)
 
   useEffect(() => {
-    try {
-      const adminSettings = localStorage.getItem("codeClubAdminSettings")
-      if (adminSettings) {
-        const parsed = JSON.parse(adminSettings)
-        setEventsEnabled(parsed.eventsEnabled ?? true)
-      }
-    } catch {}
+    fetch("/api/admin/settings")
+      .then((r) => r.json())
+      .then((data) => setEventsEnabled(data.eventsEnabled ?? true))
+      .catch(() => setEventsEnabled(true))
   }, [])
 
   useEffect(() => {

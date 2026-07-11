@@ -24,13 +24,15 @@ export default function AdminPage() {
   const dashboardRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const adminSettings = localStorage.getItem("codeClubAdminSettings")
-    if (adminSettings) {
-      const settings = JSON.parse(adminSettings)
-      setQuizEnabled(settings.quizEnabled || false)
-      setEventsEnabled(settings.eventsEnabled ?? true)
-    }
-  }, [])
+    if (!isAuthenticated) return
+    fetch("/api/admin/settings")
+      .then((r) => r.json())
+      .then((data) => {
+        setQuizEnabled(data.quizEnabled ?? false)
+        setEventsEnabled(data.eventsEnabled ?? true)
+      })
+      .catch(console.error)
+  }, [isAuthenticated])
 
   // Check if already authenticated
   useEffect(() => {
@@ -69,10 +71,21 @@ export default function AdminPage() {
     setPassword("")
   }
 
-  const handleSaveSettings = () => {
-    const settings = { quizEnabled, eventsEnabled, lastUpdated: new Date().toISOString() }
-    localStorage.setItem("codeClubAdminSettings", JSON.stringify(settings))
-    toast.success("Settings saved successfully!")
+  const handleSaveSettings = async () => {
+    try {
+      const res = await fetch("/api/admin/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ quizEnabled, eventsEnabled }),
+      })
+      if (res.ok) {
+        toast.success("Settings saved successfully!")
+      } else {
+        toast.error("Failed to save settings.")
+      }
+    } catch {
+      toast.error("Network error. Please try again.")
+    }
   }
 
   const [membersCount, setMembersCount] = useState<number | null>(null)

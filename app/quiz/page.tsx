@@ -4,16 +4,20 @@ import { useState, useEffect, useRef } from "react"
 import { gsap } from "gsap"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { Brain, Trophy, Clock, Users, Play, ArrowLeft } from "lucide-react"
+import { Brain, Trophy, Clock, Users, Play, ArrowLeft, Lock } from "lucide-react"
 import Link from "next/link"
 import { ParticleBackground } from "@/components/particle-background"
 import { Navbar } from "@/components/navbar"
 import { PageHero } from "@/components/page-hero"
+import { useUser } from "@/hooks/use-user"
+import { useRouter } from "next/navigation"
 type Option = { id: string; text: string; isCorrect: boolean }
 type Question = { id: string; text: string; options: Option[] }
 type Quiz = { _id?: string; id?: string; title: string; description?: string; questions: Question[] }
 
 export default function QuizPage() {
+  const { user, loading: userLoading } = useUser()
+  const router = useRouter()
   const [quizEnabled, setQuizEnabled] = useState(false)
   const [showRegistration, setShowRegistration] = useState(false)
   const [showQuiz, setShowQuiz] = useState(false)
@@ -27,13 +31,10 @@ export default function QuizPage() {
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    try {
-      const adminSettings = localStorage.getItem("codeClubAdminSettings")
-      if (adminSettings) {
-        const settings = JSON.parse(adminSettings)
-        setQuizEnabled(settings.quizEnabled || false)
-      }
-    } catch {}
+    fetch("/api/admin/settings")
+      .then((r) => r.json())
+      .then((data) => setQuizEnabled(data.quizEnabled ?? false))
+      .catch(() => setQuizEnabled(false))
   }, [])
 
   useEffect(() => {
@@ -85,6 +86,59 @@ export default function QuizPage() {
 
   const handleSelectOption = (idx: number) => {
     setUserAnswers((prev) => { const arr = [...prev]; arr[currentQuestion] = idx; return arr })
+  }
+
+  // Show loading state while checking auth
+  if (userLoading) {
+    return (
+      <main className="relative min-h-screen">
+        <ParticleBackground />
+        <Navbar />
+        <div className="pt-20 flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <div className="w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-muted-foreground">Checking access...</p>
+          </div>
+        </div>
+      </main>
+    )
+  }
+
+  // Redirect guests — show a locked state with a login prompt
+  if (!user) {
+    return (
+      <main className="relative min-h-screen">
+        <ParticleBackground />
+        <Navbar />
+        <div className="pt-20">
+          <PageHero
+            title="Test Your"
+            highlight="Skills"
+            subtitle="Participate in our regular coding quizzes and see where you stand."
+            badge="Quiz"
+          />
+          <div className="container mx-auto px-4 pb-20">
+            <div ref={containerRef} className="max-w-md mx-auto text-center mt-8">
+              <div className="glass-card rounded-3xl p-12">
+                <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6" style={{ background: "rgba(168,85,247,0.15)", border: "1px solid rgba(168,85,247,0.3)" }}>
+                  <Lock className="h-10 w-10 text-purple-400" />
+                </div>
+                <h1 className="text-3xl font-bold mb-3 text-foreground">Login Required</h1>
+                <p className="text-muted-foreground mb-8">You need to be logged in to take quizzes and track your progress.</p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <Button onClick={() => router.push("/login?next=/quiz")} className="bg-gradient-to-r from-purple-600 to-blue-600 hover:shadow-lg">
+                    Login to Continue
+                  </Button>
+                  <Button variant="outline" onClick={() => router.push("/signup")}>
+                    Create Account
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    )
   }
 
   if (!quizEnabled) {
@@ -169,9 +223,9 @@ export default function QuizPage() {
               <Card className="glass-card p-8">
                 <h3 className="text-2xl font-bold mb-6 text-center text-foreground">Quiz Registration</h3>
                 <div className="space-y-4">
-                  <input type="text" placeholder="Full Name" className="w-full glass rounded-lg px-4 py-3 text-foreground placeholder-muted-foreground bg-background/50" />
-                  <input type="email" placeholder="Email Address" className="w-full glass rounded-lg px-4 py-3 text-foreground placeholder-muted-foreground bg-background/50" />
-                  <input type="text" placeholder="Roll Number" className="w-full glass rounded-lg px-4 py-3 text-foreground placeholder-muted-foreground bg-background/50" />
+                  <input type="text" value={user?.fullName || ""} readOnly placeholder="Full Name" className="w-full glass rounded-lg px-4 py-3 text-foreground placeholder-muted-foreground bg-background/50 opacity-75 cursor-not-allowed" />
+                  <input type="email" value={user?.email || ""} readOnly placeholder="Email Address" className="w-full glass rounded-lg px-4 py-3 text-foreground placeholder-muted-foreground bg-background/50 opacity-75 cursor-not-allowed" />
+                  <input type="text" value={user?.username || ""} readOnly placeholder="Username" className="w-full glass rounded-lg px-4 py-3 text-foreground placeholder-muted-foreground bg-background/50 opacity-75 cursor-not-allowed" />
                 </div>
                 <div className="flex gap-4 mt-6">
                   <Button onClick={handleStartQuiz} className="flex-1 bg-purple-600 hover:bg-purple-700">Start Quiz</Button>

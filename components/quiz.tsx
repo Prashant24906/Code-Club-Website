@@ -6,11 +6,15 @@ import { ScrollTrigger } from "gsap/ScrollTrigger"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Brain, Trophy, Clock, Users, Play, Settings } from "lucide-react"
+import { useUser } from "@/hooks/use-user"
+import { useRouter } from "next/navigation"
 
 gsap.registerPlugin(ScrollTrigger)
 
 export function Quiz() {
   const ref = useRef<HTMLElement>(null)
+  const { user, loading: userLoading } = useUser()
+  const router = useRouter()
   const [quizEnabled, setQuizEnabled] = useState(true)
   const [showRegistration, setShowRegistration] = useState(false)
   const [showQuiz, setShowQuiz] = useState(false)
@@ -86,8 +90,17 @@ export function Quiz() {
                   <div key={text} className="flex items-center space-x-3"><Icon className="h-5 w-5 text-purple-400" /><span>{text}</span></div>
                 ))}
               </div>
-              <Button onClick={() => setShowRegistration(true)} className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:shadow-lg transition-shadow">
-                <Play className="h-4 w-4 mr-2" />Start Quiz
+              <Button 
+                onClick={() => {
+                  if (!user) {
+                    router.push("/login")
+                  } else {
+                    setShowRegistration(true)
+                  }
+                }} 
+                className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:shadow-lg transition-shadow"
+              >
+                <Play className="h-4 w-4 mr-2" />{user ? "Start Quiz" : "Login to Start"}
               </Button>
             </div>
 
@@ -113,9 +126,9 @@ export function Quiz() {
             <Card className="glass-card p-8">
               <h3 className="text-2xl font-bold mb-6 text-center">Quiz Registration</h3>
               <div className="space-y-4">
-                <input type="text" placeholder="Full Name" className="w-full glass rounded-lg px-4 py-3 text-white placeholder-gray-400" />
-                <input type="email" placeholder="Email Address" className="w-full glass rounded-lg px-4 py-3 text-white placeholder-gray-400" />
-                <input type="text" placeholder="Roll Number" className="w-full glass rounded-lg px-4 py-3 text-white placeholder-gray-400" />
+                <input type="text" placeholder="Full Name" value={user?.fullName || ""} readOnly className="w-full glass rounded-lg px-4 py-3 text-white placeholder-gray-400 opacity-70 cursor-not-allowed" />
+                <input type="email" placeholder="Email Address" value={user?.email || ""} readOnly className="w-full glass rounded-lg px-4 py-3 text-white placeholder-gray-400 opacity-70 cursor-not-allowed" />
+                <input type="text" placeholder="Username (Roll Number)" value={user?.username || ""} readOnly className="w-full glass rounded-lg px-4 py-3 text-white placeholder-gray-400 opacity-70 cursor-not-allowed" />
               </div>
               <div className="flex gap-4 mt-6">
                 <Button onClick={handleStartQuiz} className="flex-1 bg-purple-600 hover:bg-purple-700">Start Quiz</Button>
