@@ -405,32 +405,22 @@ export function Hero() {
                     {current.sub} —{" "}
                     <span className="font-serif font-medium text-white/50 italic text-[10px] sm:text-sm tracking-wide leading-relaxed">{current.desc.slice(0, 6)}<br />{current.desc.slice(6,24)}<br />{current.desc.slice(24,46)}<br/>{current.desc.slice(46,68)}</span>
                   </p>
+
+                  {/* Unified CTA below description */}
+                  <div className="mt-4 sm:mt-6 w-full sm:w-fit">
+                    <button
+                      onClick={handleJoinNow}
+                      className="w-full sm:w-fit flex items-center justify-center gap-2 rounded-full py-3 sm:py-2.5 px-6 sm:px-8 text-sm font-bold text-white shadow-lg transition-all duration-300 hover:scale-105 active:scale-95 hover:brightness-110"
+                      style={{
+                        background: `linear-gradient(135deg, ${current.accent}, ${current.accent}cc)`,
+                        boxShadow: `0 8px 24px ${current.accent}40`,
+                      }}
+                    >
+                      {user ? "Explore Events" : "Join Now"} <ArrowRight size={15} />
+                    </button>
+                  </div>
                 </div>
               </div>
-
-              {/* Mobile CTA */}
-              <button
-                onClick={handleJoinNow}
-                className="sm:hidden mb-4 w-full flex items-center justify-center gap-2 rounded-full py-3 px-6 text-sm font-bold text-white shadow-lg transition-transform active:scale-95"
-                style={{
-                  background: current.accent,
-                  boxShadow: `0 8px 24px ${current.accent}40`,
-                }}
-              >
-                {user ? "Explore Events" : "Join Now"} <ArrowRight size={16} />
-              </button>
-
-              {/* Desktop CTA */}
-              <button
-                onClick={handleJoinNow}
-                className="hidden sm:flex items-center gap-2 rounded-full py-2.5 px-6 text-sm font-bold text-white shadow-lg transition-all duration-300 hover:scale-105 active:scale-95 hover:brightness-110"
-                style={{
-                  background: `linear-gradient(135deg, ${current.accent}, ${current.accent}cc)`,
-                  boxShadow: `0 8px 24px ${current.accent}40`,
-                }}
-              >
-                {user ? "Explore Events" : "Join Now"} <ArrowRight size={15} />
-              </button>
             </div>
           </div>
         </div>
