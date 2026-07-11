@@ -455,9 +455,14 @@ export function Hero() {
       <style>{`
         .absolute-center {
           position: absolute;
-          top: 50%;
+          top: 60%;
           left: 50%;
           transform: translate(-50%, -50%);
+        }
+        @media (min-width: 640px) {
+          .absolute-center {
+            top: 50%;
+          }
         }
         .mask-clip-path {
           clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
