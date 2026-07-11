@@ -3,17 +3,25 @@ import nodemailer from "nodemailer";
 let transporter: nodemailer.Transporter | null = null;
 
 function createTransporter() {
+  const user = process.env.EMAIL_USER?.trim();
+  const pass = process.env.EMAIL_PASSWORD?.trim();
+
+  if (!user || !pass) {
+    throw new Error(
+      "EMAIL_USER and EMAIL_PASSWORD must be set in your .env file. " +
+      "Use a Gmail App Password for EMAIL_PASSWORD (not your regular Gmail password)."
+    );
+  }
+
   return nodemailer.createTransport({
     host: "smtp.gmail.com",
     port: 587,
     secure: false,
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASSWORD,
-    },
+    auth: { user, pass },
     tls: { rejectUnauthorized: true },
   });
 }
+
 
 export function getMailer(): nodemailer.Transporter {
   if (!transporter) {
@@ -31,7 +39,7 @@ export async function sendMail(options: {
   const mailer = getMailer();
   try {
     await mailer.sendMail({
-      from: `"CoDE Club" <${process.env.EMAIL_USER}>`,
+      from: `"CoDE Club" <${process.env.EMAIL_USER?.trim()}>`,
       ...options,
     });
   } catch (err) {

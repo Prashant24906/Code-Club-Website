@@ -2,10 +2,12 @@
 
 import { useState, useEffect, useRef } from "react"
 import gsap from "gsap"
-import { Menu, X, Shield, Sun, Moon } from "lucide-react"
+import { Menu, X, Shield, Sun, Moon, LogOut, UserCircle2 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
+import { useUser } from "@/hooks/use-user"
+import { toast } from "sonner"
 
 // Accent colours cycling with the hero (sky → emerald → violet → rose)
 const ACCENT_CYCLE = ["#38bdf8", "#34d399", "#a78bfa", "#fb7185"]
@@ -16,8 +18,10 @@ export function Navbar() {
   const [accentIndex, setAccentIndex] = useState(0)
   const [isDark, setIsDark] = useState(true)
   const pathname = usePathname()
+  const router = useRouter()
   const navRef = useRef<HTMLElement>(null)
   const mobileMenuRef = useRef<HTMLDivElement>(null)
+  const { user, loading: userLoading, logout } = useUser()
 
   // Persist + apply saved theme on mount
   useEffect(() => {
@@ -66,6 +70,13 @@ export function Navbar() {
     setIsDark(next)
     localStorage.setItem("theme", next ? "dark" : "light")
     document.documentElement.classList.toggle("dark", next)
+  }
+
+  const handleLogout = async () => {
+    await logout()
+    toast.success("Signed out successfully")
+    router.push("/")
+    router.refresh()
   }
 
   const accent = ACCENT_CYCLE[accentIndex]
@@ -194,6 +205,65 @@ export function Navbar() {
               }
             </button>
 
+            {/* Auth actions */}
+            {!userLoading && (
+              user ? (
+                <div className="flex items-center gap-2">
+                  {/* User avatar — links to profile */}
+                  <Link
+                    href="/profile"
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all duration-300 hover:scale-105"
+                    style={{
+                      color: accent,
+                      borderColor: `${accent}30`,
+                      background: `${accent}10`,
+                    }}
+                  >
+                    <UserCircle2 size={14} />
+                    <span className="max-w-[80px] truncate">{user.fullName || user.username}</span>
+                  </Link>
+                  {/* Logout */}
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-widest border transition-all duration-300 hover:scale-105"
+                    style={{
+                      color: "#fb7185",
+                      borderColor: "rgba(251,113,133,0.3)",
+                      background: "rgba(251,113,133,0.08)",
+                    }}
+                    aria-label="Sign out"
+                  >
+                    <LogOut size={13} />
+                    Logout
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Link
+                    href="/login"
+                    className="px-4 py-1.5 rounded-xl text-xs font-bold uppercase tracking-widest border transition-all duration-300 hover:scale-105"
+                    style={{
+                      color: accent,
+                      borderColor: `${accent}30`,
+                      background: `${accent}08`,
+                    }}
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    href="/signup"
+                    className="px-4 py-1.5 rounded-xl text-xs font-bold uppercase tracking-widest text-white transition-all duration-300 hover:scale-105"
+                    style={{
+                      background: `linear-gradient(135deg, ${accent}, ${accent}cc)`,
+                      boxShadow: `0 4px 12px ${accent}30`,
+                    }}
+                  >
+                    Sign Up
+                  </Link>
+                </div>
+              )
+            )}
+
             {/* Admin */}
             <Link
               href="/admin"
@@ -283,6 +353,56 @@ export function Navbar() {
                 {isDark ? "Light" : "Dark"}
               </button>
             </div>
+
+            {/* Mobile auth */}
+            {!userLoading && (
+              user ? (
+                <div className="flex flex-col gap-1">
+                  <Link
+                    href="/profile"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium border transition-all duration-200"
+                    style={{ borderColor: `${accent}20`, background: `${accent}08`, color: accent }}
+                  >
+                    <UserCircle2 size={16} />
+                    <div className="flex flex-col min-w-0">
+                      <span className="truncate font-bold">{user.fullName || user.username}</span>
+                      {user.fullName && <span className="text-xs opacity-60 truncate">@{user.username}</span>}
+                    </div>
+                  </Link>
+                  <button
+                    onClick={() => { setIsOpen(false); handleLogout() }}
+                    className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold border transition-all duration-200"
+                    style={{ color: "#fb7185", borderColor: "rgba(251,113,133,0.3)", background: "rgba(251,113,133,0.08)" }}
+                  >
+                    <LogOut size={14} />
+                    Sign Out
+                  </button>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-1">
+                  <Link
+                    href="/login"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold border transition-all duration-200"
+                    style={{ color: accent, borderColor: `${accent}30`, background: `${accent}08` }}
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    href="/signup"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white transition-all duration-200"
+                    style={{
+                      background: `linear-gradient(135deg, ${accent}, ${accent}cc)`,
+                      boxShadow: `0 4px 12px ${accent}30`,
+                    }}
+                  >
+                    Sign Up
+                  </Link>
+                </div>
+              )
+            )}
 
             {/* Mobile admin */}
             <Link

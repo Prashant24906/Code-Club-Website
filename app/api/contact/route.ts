@@ -4,14 +4,14 @@ import { sendMail } from "@/lib/mailer";
 export async function POST(request: NextRequest) {
   try {
     const { firstName, lastName, email, subject, message } = await request.json();
-
+    const Email = process.env.EMAIL_USER ;
     if (!firstName || !lastName || !email || !subject || !message) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
     // Send email to admin
     await sendMail({
-      to: "prajyotyt18@gmail.com",
+      to: `${Email}`,
       subject: `New Contact Form Submission: ${subject}`,
       html: `
         <h2>New Contact Form Submission</h2>

@@ -5,7 +5,9 @@ import { useGSAP } from "@gsap/react"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 import { useEffect, useRef, useState } from "react"
 import Image from "next/image"
+import { useRouter } from "next/navigation"
 import { Code, Users, Zap, ArrowRight } from "lucide-react"
+import { useUser } from "@/hooks/use-user"
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -77,8 +79,8 @@ const slides = [
     icon: Code,
     title: "Code",
     sub: "Build the Future",
-    desc: `A Club for The Students 
-    by the students and to the students`,
+    desc: `A Club For The Students, 
+    By the students, To the students`,
   },
   {
     bg: "from-emerald-950 via-teal-950 to-slate-950",
@@ -87,8 +89,8 @@ const slides = [
     icon: Users,
     title: "Collaborate",
     sub: "Build Together",
-    desc:  `A Club for The Students 
-    by the students and to the students`,
+    desc:  `A Club For The Students, 
+    By the students, To the students`,
   },
   {
     bg: "from-violet-950 via-purple-950 to-slate-950",
@@ -97,8 +99,8 @@ const slides = [
     icon: Zap,
     title: "Innovate",
     sub: "Push the Limits",
-    desc:  `A Club for The Students 
-    by the students and to the students`,
+    desc:  `A Club For The Students, 
+    By the students, To the students`,
   },
   {
     bg: "from-rose-950 via-pink-950 to-slate-950",
@@ -107,8 +109,8 @@ const slides = [
     icon: ArrowRight,
     title: "Grow",
     sub: "Level Up Daily",
-    desc:  `A Club for The Students 
-    by the students and to the students`,
+    desc:  `A Club For The Students,
+    By the students, To the students`,
   },
 ]
 
@@ -118,8 +120,19 @@ export function Hero() {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [hasClicked, setHasClicked] = useState(false)
   const [loading, setLoading] = useState(true)
+  const { user } = useUser()
+  const router = useRouter()
 
   const nextPanelRef = useRef<HTMLDivElement>(null)
+
+  const handleJoinNow = () => {
+    if (user) {
+      const el = document.getElementById("events")
+      el?.scrollIntoView({ behavior: "smooth" })
+    } else {
+      router.push("/login")
+    }
+  }
 
   // Simulate load gate (mirrors the video-loading wait)
   useEffect(() => {
@@ -390,22 +403,34 @@ export function Hero() {
                   />
                   <p className="text-[10px] sm:text-sm md:text-base font-medium text-white/60 leading-tight max-w-2xl">
                     {current.sub} —{" "}
-                    <span className="font-serif font-medium text-white/50 italic text-[10px] sm:text-sm tracking-wide leading-relaxed">{current.desc.slice(0, 6)}<br />{current.desc.slice(6,23)}<br />{current.desc.slice(23,45)}<br/>{current.desc.slice(45,68)}</span>
+                    <span className="font-serif font-medium text-white/50 italic text-[10px] sm:text-sm tracking-wide leading-relaxed">{current.desc.slice(0, 6)}<br />{current.desc.slice(6,24)}<br />{current.desc.slice(24,46)}<br/>{current.desc.slice(46,68)}</span>
                   </p>
                 </div>
               </div>
 
               {/* Mobile CTA */}
-              <a
-                href="events"
+              <button
+                onClick={handleJoinNow}
                 className="sm:hidden mb-4 w-full flex items-center justify-center gap-2 rounded-full py-3 px-6 text-sm font-bold text-white shadow-lg transition-transform active:scale-95"
                 style={{
                   background: current.accent,
                   boxShadow: `0 8px 24px ${current.accent}40`,
                 }}
               >
-                Explore Events <ArrowRight size={16} />
-              </a>
+                {user ? "Explore Events" : "Join Now"} <ArrowRight size={16} />
+              </button>
+
+              {/* Desktop CTA */}
+              <button
+                onClick={handleJoinNow}
+                className="hidden sm:flex items-center gap-2 rounded-full py-2.5 px-6 text-sm font-bold text-white shadow-lg transition-all duration-300 hover:scale-105 active:scale-95 hover:brightness-110"
+                style={{
+                  background: `linear-gradient(135deg, ${current.accent}, ${current.accent}cc)`,
+                  boxShadow: `0 8px 24px ${current.accent}40`,
+                }}
+              >
+                {user ? "Explore Events" : "Join Now"} <ArrowRight size={15} />
+              </button>
             </div>
           </div>
         </div>

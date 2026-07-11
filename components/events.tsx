@@ -6,6 +6,8 @@ import { ScrollTrigger } from "gsap/ScrollTrigger"
 import { Calendar, MapPin, Clock } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Markdown } from "@/components/ui/markdown"
+import { useUser } from "@/hooks/use-user"
+import { AuthModal } from "@/components/auth-modal"
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -26,6 +28,9 @@ export function Events() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null)
   const [eventAspectById, setEventAspectById] = useState<Record<string, "square" | "portrait">>({})
   const sectionRef = useRef<HTMLElement>(null)
+  const { user } = useUser()
+  const [authModalOpen, setAuthModalOpen] = useState(false)
+  const [pendingFormLink, setPendingFormLink] = useState<string | null>(null)
 
   useEffect(() => {
     try {
@@ -79,6 +84,16 @@ export function Events() {
   const upcomingEvents = events.filter(isUpcomingEvent)
   const pastEvents = events.filter((e) => !isUpcomingEvent(e))
 
+  const handleRegister = (e: React.MouseEvent, formLink: string) => {
+    e.stopPropagation()
+    if (user) {
+      window.open(formLink, "_blank", "noopener,noreferrer")
+    } else {
+      setPendingFormLink(formLink)
+      setAuthModalOpen(true)
+    }
+  }
+
   if (!eventsEnabled) {
     return (
       <section id="events" className="py-20 px-4">
@@ -120,7 +135,12 @@ export function Events() {
                     {event.location && <div className="flex items-center space-x-2"><MapPin className="h-4 w-4" style={{ color: "var(--accent-blue)" }} /><span className="truncate">{event.location}</span></div>}
                   </div>
                   {event.googleFormLink && (
-                    <a href={event.googleFormLink} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="inline-flex w-full justify-center bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium transition-transform hover:scale-[1.02]">Register</a>
+                    <button
+                      onClick={(e) => handleRegister(e, event.googleFormLink!)}
+                      className="inline-flex w-full justify-center bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium transition-transform hover:scale-[1.02]"
+                    >
+                      Register
+                    </button>
                   )}
                 </div>
               ))}
@@ -172,7 +192,12 @@ export function Events() {
                     {selectedEvent.location && <div className="flex items-center gap-2 text-muted-foreground"><MapPin className="h-4 w-4" style={{ color: "var(--accent-blue)" }} /><span>{selectedEvent.location}</span></div>}
                   </div>
                   {selectedEvent.googleFormLink && isUpcomingEvent(selectedEvent) && (
-                    <a href={selectedEvent.googleFormLink} target="_blank" rel="noopener noreferrer" className="inline-flex w-full md:w-auto justify-center bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium transition-transform hover:scale-[1.02]">Register</a>
+                    <button
+                      onClick={(e) => handleRegister(e, selectedEvent.googleFormLink!)}
+                      className="inline-flex w-full md:w-auto justify-center bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium transition-transform hover:scale-[1.02]"
+                    >
+                      Register
+                    </button>
                   )}
                 </div>
               </div>
@@ -180,6 +205,19 @@ export function Events() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Auth Modal — shown when unauthenticated user clicks Register */}
+      <AuthModal
+        open={authModalOpen}
+        onOpenChange={setAuthModalOpen}
+        reason="You need to be signed in to register for events."
+        onSuccess={() => {
+          if (pendingFormLink) {
+            window.open(pendingFormLink, "_blank", "noopener,noreferrer")
+            setPendingFormLink(null)
+          }
+        }}
+      />
     </section>
   )
 }
