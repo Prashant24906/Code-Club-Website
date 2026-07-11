@@ -12,15 +12,15 @@ type Teacher = { name: string; role: string; image: string; motivation: string }
 const hod: Teacher = {
   name: "Dr. Mrs. S. S. Bhavsar",
   role: "HOD, IT and AIML Department",
-  image: "/motivation-teacher-hod.svg",
+  image: "/Swapna mam.jpg",
   motivation: "Great engineers are made through discipline, ethics, and the courage to keep learning.",
 };
 
 const teachers: Teacher[] = [
-  { name: "Mrs. P. L. Rakibe", role: "Activity Coordinator", image: "/motivation-teacher-3.svg", motivation: "Participation in activities builds leadership, confidence, and communication skills." },
-  { name: "Mrs. S. A. Kulkarni", role: "Academic Coordinator", image: "/motivation-teacher-1.svg", motivation: "Strong fundamentals and consistent revision create long-term confidence in technology." },
-  { name: "Mrs. S. D. Bhirud", role: "Academic Coordinator", image: "/motivation-teacher-2.svg", motivation: "Structured guidance and regular practice turn students into dependable professionals." },
-  { name: "Ms. G. V. Mathad", role: "Code Club Coordinator & Activity Incharge", image: "/motivation-teacher-4.svg", motivation: "Real growth starts when students build together and turn ideas into working projects." },
+  { name: "Mrs. P. L. Rakibe", role: "Activity Coordinator", image: "/Poonam mam.png", motivation: "Participation in activities builds leadership, confidence, and communication skills." },
+  { name: "Mrs. S. A. Kulkarni", role: "Academic Coordinator", image: "/Sampada mam.png", motivation: "Strong fundamentals and consistent revision create long-term confidence in technology." },
+  { name: "Mrs. S. D. Bhirud", role: "Academic Coordinator", image: "/bhirud mam.png", motivation: "Structured guidance and regular practice turn students into dependable professionals." },
+  { name: "Ms. G. V. Mathad", role: "Code Club Coordinator & Activity Incharge", image: "/Mathad mam.png", motivation: "Real growth starts when students build together and turn ideas into working projects." },
 ];
 
 export function Motivation() {
