@@ -1,7 +1,8 @@
 // Event Interface
 export interface EventType {
   _id?: string;
-  image: string;
+  image?: string;   // legacy single-image (backward compat)
+  images?: string[]; // new multi-image array
   title: string;
   date: string; // ISO string
   description: string;

@@ -2,7 +2,8 @@ import mongoose from "mongoose";
 
 const eventSchema = new mongoose.Schema(
   {
-    image: String,
+    image: String,               // legacy single-image (backward compat)
+    images: { type: [String], default: [] }, // new multi-image array
     title: { type: String, required: true },
     date: Date,
     description: String,

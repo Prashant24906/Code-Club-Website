@@ -20,7 +20,7 @@ import {
 import { useDropzone } from "react-dropzone"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
-import { CalendarIcon } from "lucide-react"
+import { CalendarIcon, X } from "lucide-react"
 import ImageCropperDialog from "@/components/image-cropper-dialog"
 import { EventType } from "@/lib/types"
 
@@ -33,7 +33,7 @@ export default function EventsAdminPage() {
   const [aLocation, setALocation] = useState("")
   const [aDescription, setADescription] = useState("")
   const [aGoogleForm, setAGoogleForm] = useState("")
-  const [aImage, setAImage] = useState<string | undefined>(undefined)
+  const [aImages, setAImages] = useState<string[]>([])
   const [aImageRatio, setAImageRatio] = useState<EventImageRatio>("portrait")
 
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -43,7 +43,7 @@ export default function EventsAdminPage() {
   const [eLocation, setELocation] = useState("")
   const [eDescription, setEDescription] = useState("")
   const [eGoogleForm, setEGoogleForm] = useState("")
-  const [eImage, setEImage] = useState<string | undefined>(undefined)
+  const [eImages, setEImages] = useState<string[]>([])
   const [eImageRatio, setEImageRatio] = useState<EventImageRatio>("portrait")
 
   const [addCropOpen, setAddCropOpen] = useState(false)
@@ -68,8 +68,9 @@ export default function EventsAdminPage() {
       date: aDate,
       location: aLocation.trim() || undefined,
       description: aDescription.trim(),
-      image: aImage || "",
+      images: aImages,
       googleFormLink: aGoogleForm.trim() || undefined,
+      image: aImages[0] || "", // legacy compat
     }
 
     try {
@@ -94,8 +95,9 @@ export default function EventsAdminPage() {
       date: eDate,
       location: eLocation.trim() || undefined,
       description: eDescription.trim(),
-      image: eImage || "",
+      images: eImages,
       googleFormLink: eGoogleForm.trim() || undefined,
+      image: eImages[0] || "", // legacy compat
     }
 
     try {
@@ -144,7 +146,7 @@ export default function EventsAdminPage() {
     setALocation("")
     setADescription("")
     setAGoogleForm("")
-    setAImage(undefined)
+    setAImages([])
     setAImageRatio("portrait")
   }
   function resetEditForm() {
@@ -154,7 +156,7 @@ export default function EventsAdminPage() {
     setELocation("")
     setEDescription("")
     setEGoogleForm("")
-    setEImage(undefined)
+    setEImages([])
     setEImageRatio("portrait")
   }
 
@@ -248,7 +250,16 @@ export default function EventsAdminPage() {
     setELocation(event.location || "")
     setEDescription(event.description)
     setEGoogleForm(event.googleFormLink || "")
-    setEImage(event.image || "")
+    
+    // Support legacy data structure
+    if (event.images && event.images.length > 0) {
+      setEImages(event.images)
+    } else if (event.image) {
+      setEImages([event.image])
+    } else {
+      setEImages([])
+    }
+    
     setEImageRatio("portrait")
     setEditOpen(true)
   }
@@ -276,58 +287,56 @@ export default function EventsAdminPage() {
           <p className="text-sm text-muted-foreground">No events yet.</p>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {events.map((e) => (
-              <div key={e._id} className="rounded-lg border border-border overflow-hidden bg-background/50">
-                <div className="relative w-full bg-muted/30 overflow-hidden aspect-[3/4]">
-                  {e.image ? (
-                    <img
-                      src={e.image || "/placeholder.svg"}
-                      loading="lazy"
-                      alt={e.title}
-                      className="absolute inset-0 h-full w-full object-contain p-2"
-                    />
-                  ) : (
-                    <img
-                      src="/event-thumbnail-placeholder.jpg"
-                      loading="lazy"
-                      alt="Event thumbnail placeholder"
-                      className="absolute inset-0 h-full w-full object-contain p-2"
-                    />
-                  )}
+            {events.map((e) => {
+              const coverImg = (e.images && e.images.length > 0) ? e.images[0] : e.image
+              return (
+                <div key={e._id} className="rounded-lg border border-border overflow-hidden bg-background/50">
+                  <div className="relative w-full bg-muted/30 overflow-hidden aspect-[3/4]">
+                    {coverImg ? (
+                      <img
+                        src={coverImg}
+                        loading="lazy"
+                        alt={e.title}
+                        className="absolute inset-0 h-full w-full object-contain p-2"
+                      />
+                    ) : (
+                      <img
+                        src="/event-thumbnail-placeholder.jpg"
+                        loading="lazy"
+                        alt="Event thumbnail placeholder"
+                        className="absolute inset-0 h-full w-full object-contain p-2"
+                      />
+                    )}
+                  </div>
+                  <div className="p-4">
+                    <div className="font-semibold truncate" title={e.title}>
+                      {e.title}
+                    </div>
+                    <div className="mt-1 text-sm text-muted-foreground flex flex-col gap-0.5">
+                      <span>{new Date(e.date).toLocaleDateString()}</span>
+                      <span>{e.location || "TBD"}</span>
+                    </div>
+                    <div className="mt-4 flex gap-2">
+                      <Button size="sm" variant="secondary" onClick={() => openEdit(e)}>
+                        Edit
+                      </Button>
+                      <Button size="sm" variant="destructive" onClick={() => openDeleteDialog(e._id!)}>
+                        Delete
+                      </Button>
+                    </div>
+                  </div>
                 </div>
-                <div className="p-4">
-                  <div className="font-semibold truncate" title={e.title}>
-                    {e.title}
-                  </div>
-                  <div className="mt-1 text-sm text-muted-foreground flex flex-col gap-0.5">
-                    <span>{new Date(e.date).toLocaleDateString()}</span>
-                    <span>{e.location || "TBD"}</span>
-                  </div>
-                  <div className="mt-4 flex gap-2">
-                    <Button size="sm" variant="secondary" onClick={() => openEdit(e)}>
-                      Edit
-                    </Button>
-                    <Button size="sm" variant="destructive" onClick={() => openDeleteDialog(e._id!)}>
-                      Delete
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </Card>
 
       <Card className="glass-card rounded-xl p-6">
         <h2 className="mb-4 text-lg font-semibold">Add New Event</h2>
-        <div
-          {...getAddRootProps()}
-          className={`mb-4 rounded-lg border border-dashed p-6 text-center transition ${
-            addDragActive ? "bg-accent/10 border-accent" : "bg-background/50"
-          }`}
-        >
-          <input {...getAddInputProps()} />
-          <div className="mb-3 flex items-center justify-center gap-2">
+        
+        <div className="mb-4 space-y-4">
+          <div className="flex items-center justify-center gap-2">
             <Button
               type="button"
               size="sm"
@@ -351,83 +360,34 @@ export default function EventsAdminPage() {
               3:4
             </Button>
           </div>
-          {aImage ? (
-            <div className="flex flex-col items-center gap-3">
-              <div
-                className={`relative w-full rounded-md overflow-hidden ${
-                  aImageRatio === "square" ? "aspect-square" : "aspect-[3/4]"
-                }`}
-              >
-                <img
-                  src={aImage || "/placeholder.svg"}
-                  loading="lazy"
-                  alt="Selected event"
-                  className="absolute inset-0 h-full w-full object-contain p-2"
-                />
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    if (aImage) {
-                      setAddCropSrc(aImage)
-                      setAddCropOpen(true)
-                    }
-                  }}
-                >
-                  Edit Crop
-                </Button>
-                <label className="sr-only" htmlFor="add-image-input">
-                  Replace image
-                </label>
-                <input
-                  id="add-image-input"
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(ev) => {
-                    const file = ev.target.files?.[0]
-                    if (!file) return
-                    const reader = new FileReader()
-                    reader.onload = () => {
-                      const result = typeof reader.result === "string" ? reader.result : undefined
-                      if (result) {
-                        setAddCropSrc(result)
-                        setAddCropOpen(true)
-                      }
-                    }
-                    reader.readAsDataURL(file)
-                  }}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    document.getElementById("add-image-input")?.click()
-                  }}
-                >
-                  Replace
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    setAImage(undefined)
-                  }}
-                >
-                  Remove
-                </Button>
-              </div>
-            </div>
-          ) : (
+
+          <div
+            {...getAddRootProps()}
+            className={`rounded-lg border border-dashed p-6 text-center transition cursor-pointer ${
+              addDragActive ? "bg-accent/10 border-accent" : "bg-background/50 hover:bg-background/80"
+            }`}
+          >
+            <input {...getAddInputProps()} id="add-multi-image" />
             <div className="text-sm text-muted-foreground">
-              <p className="font-medium text-foreground mb-1">Upload event image</p>
-              <p>Preferred ratio: 1:1 or 3:4</p>
+              <p className="font-medium text-foreground mb-1">Upload event image(s)</p>
               <p>Drag & drop here, or click to select</p>
+            </div>
+          </div>
+
+          {aImages.length > 0 && (
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+              {aImages.map((src, idx) => (
+                <div key={idx} className={`relative rounded-md border border-white/10 overflow-hidden ${aImageRatio === "square" ? "aspect-square" : "aspect-[3/4]"}`}>
+                  <img src={src} className="w-full h-full object-contain p-1 bg-black/20" alt={`Upload ${idx + 1}`} />
+                  <button
+                    onClick={() => setAImages(prev => prev.filter((_, i) => i !== idx))}
+                    className="absolute top-1 right-1 rounded-full bg-red-500/80 p-1 hover:bg-red-500 text-white transition-colors"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                  {idx === 0 && <span className="absolute bottom-0 inset-x-0 bg-primary text-[10px] text-center font-bold uppercase py-0.5">Cover</span>}
+                </div>
+              ))}
             </div>
           )}
         </div>
@@ -531,39 +491,39 @@ export default function EventsAdminPage() {
           </div>
         </div>
       </Card>
+      
       <ImageCropperDialog
         open={addCropOpen}
         onOpenChange={setAddCropOpen}
-        src={addCropSrc || "/placeholder.svg?height=512&width=512&query=event%20thumbnail"} // Fallback to placeholder
-        onCropped={(dataUrl) => setAImage(dataUrl ?? "")} // Ensure a string is set
+        src={addCropSrc || "/placeholder.svg?height=512&width=512&query=event%20thumbnail"} 
+        onCropped={(dataUrl) => {
+          if (dataUrl) setAImages(prev => [...prev, dataUrl])
+        }}
         aspect={ratioAspect(aImageRatio)}
         outputWidth={ratioOutput(aImageRatio).w}
         outputHeight={ratioOutput(aImageRatio).h}
       />
+      
       <ImageCropperDialog
         open={editCropOpen}
         onOpenChange={setEditCropOpen}
-        src={editCropSrc || "/placeholder.svg?height=512&width=512&query=event%20thumbnail"} // Fallback to placeholder
-        onCropped={(dataUrl) => setEImage(dataUrl ?? "")} // Ensure a string is set
+        src={editCropSrc || "/placeholder.svg?height=512&width=512&query=event%20thumbnail"} 
+        onCropped={(dataUrl) => {
+          if (dataUrl) setEImages(prev => [...prev, dataUrl])
+        }}
         aspect={ratioAspect(eImageRatio)}
         outputWidth={ratioOutput(eImageRatio).w}
         outputHeight={ratioOutput(eImageRatio).h}
       />
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Event</DialogTitle>
           </DialogHeader>
 
-          <div
-            {...getEditRootProps()}
-            className={`mb-4 rounded-lg border border-dashed p-4 text-center transition ${
-              editDragActive ? "bg-accent/10 border-accent" : "bg-background/50"
-            }`}
-          >
-            <input {...getEditInputProps()} />
-            <div className="mb-3 flex items-center justify-center gap-2">
+          <div className="mb-4 space-y-4">
+            <div className="flex items-center justify-center gap-2">
               <Button
                 type="button"
                 size="sm"
@@ -587,83 +547,35 @@ export default function EventsAdminPage() {
                 3:4
               </Button>
             </div>
-            {eImage ? (
-              <div className="flex flex-col items-center gap-3">
-                <div
-                  className={`relative w-full rounded-md overflow-hidden ${
-                    eImageRatio === "square" ? "aspect-square" : "aspect-[3/4]"
-                  }`}
-                >
-                  <img
-                    src={eImage || "/placeholder.svg"} 
-                    loading="lazy"
-                    alt="Selected event"
-                    className="absolute inset-0 h-full w-full object-contain p-2"
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={(ev) => {
-                      ev.preventDefault()
-                      if (eImage) {
-                        setEditCropSrc(eImage)
-                        setEditCropOpen(true)
-                      }
-                    }}
-                  >
-                    Edit Crop
-                  </Button>
-                  <label className="sr-only" htmlFor="edit-image-input">
-                    Replace image
-                  </label>
-                  <input
-                    id="edit-image-input"
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(ev) => {
-                      const file = ev.target.files?.[0]
-                      if (!file) return
-                      const reader = new FileReader()
-                      reader.onload = () => {
-                        const result = typeof reader.result === "string" ? reader.result : undefined
-                        if (result) {
-                          setEditCropSrc(result)
-                          setEditCropOpen(true)
-                        }
-                      }
-                      reader.readAsDataURL(file)
-                    }}
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={(ev) => {
-                      ev.preventDefault()
-                      document.getElementById("edit-image-input")?.click()
-                    }}
-                  >
-                    Replace
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={(ev) => {
-                      ev.preventDefault()
-                      setEImage(undefined)
-                    }}
-                  >
-                    Remove
-                  </Button>
-                </div>
-              </div>
-            ) : (
+
+            <div
+              {...getEditRootProps()}
+              className={`rounded-lg border border-dashed p-6 text-center transition cursor-pointer ${
+                editDragActive ? "bg-accent/10 border-accent" : "bg-background/50 hover:bg-background/80"
+              }`}
+            >
+              <input {...getEditInputProps()} id="edit-multi-image" />
               <div className="text-sm text-muted-foreground">
-                <p className="font-medium text-foreground mb-1">Upload event image</p>
-                <p>Preferred ratio: 1:1 or 3:4</p>
+                <p className="font-medium text-foreground mb-1">Add event image(s)</p>
                 <p>Drag & drop here, or click to select</p>
+              </div>
+            </div>
+
+            {eImages.length > 0 && (
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                {eImages.map((src, idx) => (
+                  <div key={idx} className={`relative rounded-md border border-white/10 overflow-hidden ${eImageRatio === "square" ? "aspect-square" : "aspect-[3/4]"}`}>
+                    <img src={src} className="w-full h-full object-contain p-1 bg-black/20" alt={`Upload ${idx + 1}`} />
+                    <button
+                      type="button"
+                      onClick={() => setEImages(prev => prev.filter((_, i) => i !== idx))}
+                      className="absolute top-1 right-1 rounded-full bg-red-500/80 p-1 hover:bg-red-500 text-white transition-colors"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                    {idx === 0 && <span className="absolute bottom-0 inset-x-0 bg-primary text-[10px] text-center font-bold uppercase py-0.5">Cover</span>}
+                  </div>
+                ))}
               </div>
             )}
           </div>
@@ -713,13 +625,6 @@ export default function EventsAdminPage() {
                     />
                   </PopoverContent>
                 </Popover>
-                <input
-                  type="date"
-                  value={eDate}
-                  onChange={(e) => setEDate(e.target.value)}
-                  className="absolute inset-0 cursor-pointer"
-                  aria-label="Type or pick a date"
-                />
               </div>
             </div>
             <div className="grid gap-2">

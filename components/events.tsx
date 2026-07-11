@@ -1,9 +1,9 @@
 "use client"
 
-import { useRef, useState, useEffect } from "react"
+import { useRef, useState, useEffect, useCallback } from "react"
 import { gsap } from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
-import { Calendar, MapPin, Clock } from "lucide-react"
+import { Calendar, MapPin, Clock, ChevronLeft, ChevronRight } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Markdown } from "@/components/ui/markdown"
 import { useUser } from "@/hooks/use-user"
@@ -13,7 +13,8 @@ gsap.registerPlugin(ScrollTrigger)
 
 type Event = {
   _id: string
-  image?: string
+  image?: string       // legacy
+  images?: string[]    // new multi-image
   title: string
   date: string
   description?: string
@@ -22,9 +23,143 @@ type Event = {
   time?: string
 }
 
+/** Resolve the effective image array for an event (supports legacy single image) */
+function getImages(event: Event): string[] {
+  if (event.images && event.images.length > 0) return event.images
+  if (event.image) return [event.image]
+  return []
+}
+
+// ─── Image Carousel ──────────────────────────────────────────────────────────
+
+interface CarouselProps {
+  images: string[]
+  alt: string
+  className?: string
+  large?: boolean
+}
+
+function ImageCarousel({ images, alt, className = "", large = false }: CarouselProps) {
+  const [idx, setIdx] = useState(0)
+  const dragStartX = useRef<number | null>(null)
+  const dragging = useRef(false)
+
+  const goTo = useCallback(
+    (next: number) => {
+      if (images.length <= 1) return
+      setIdx(((next % images.length) + images.length) % images.length)
+    },
+    [images.length]
+  )
+
+  const prev = useCallback(() => goTo(idx - 1), [goTo, idx])
+  const next = useCallback(() => goTo(idx + 1), [goTo, idx])
+
+  // Mouse drag
+  const onMouseDown = (e: React.MouseEvent) => {
+    dragStartX.current = e.clientX
+    dragging.current = false
+  }
+  const onMouseMove = (e: React.MouseEvent) => {
+    if (dragStartX.current !== null && Math.abs(e.clientX - dragStartX.current) > 5) {
+      dragging.current = true
+    }
+  }
+  const onMouseUp = (e: React.MouseEvent) => {
+    if (dragStartX.current === null) return
+    const diff = e.clientX - dragStartX.current
+    if (Math.abs(diff) > 40) diff < 0 ? next() : prev()
+    dragStartX.current = null
+    dragging.current = false
+  }
+
+  // Touch swipe
+  const onTouchStart = (e: React.TouchEvent) => {
+    dragStartX.current = e.touches[0].clientX
+  }
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (dragStartX.current === null) return
+    const diff = e.changedTouches[0].clientX - dragStartX.current
+    if (Math.abs(diff) > 40) diff < 0 ? next() : prev()
+    dragStartX.current = null
+  }
+
+  if (images.length === 0) {
+    return <img src="/placeholder.svg" alt={alt} className={`w-full h-full object-contain ${className}`} />
+  }
+
+  return (
+    <div
+      className={`relative w-full h-full group select-none cursor-grab active:cursor-grabbing ${className}`}
+      onMouseDown={onMouseDown}
+      onMouseMove={onMouseMove}
+      onMouseUp={onMouseUp}
+      onMouseLeave={() => { dragStartX.current = null }}
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
+    >
+      {/* Images */}
+      {images.map((src, i) => (
+        <img
+          key={i}
+          src={src}
+          alt={`${alt} ${i + 1}`}
+          draggable={false}
+          className={`absolute inset-0 w-full h-full object-contain transition-opacity duration-300 ${
+            i === idx ? "opacity-100" : "opacity-0 pointer-events-none"
+          }`}
+          style={{ padding: "8px" }}
+        />
+      ))}
+
+      {/* Arrows */}
+      {images.length > 1 && (
+        <>
+          <button
+            onClick={(e) => { e.stopPropagation(); if (!dragging.current) prev() }}
+            className={`absolute left-1 top-1/2 -translate-y-1/2 z-10 rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/75 ${large ? "p-2" : "p-1"}`}
+            aria-label="Previous image"
+          >
+            <ChevronLeft className={large ? "h-5 w-5" : "h-4 w-4"} />
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); if (!dragging.current) next() }}
+            className={`absolute right-1 top-1/2 -translate-y-1/2 z-10 rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/75 ${large ? "p-2" : "p-1"}`}
+            aria-label="Next image"
+          >
+            <ChevronRight className={large ? "h-5 w-5" : "h-4 w-4"} />
+          </button>
+
+          {/* Dot indicators */}
+          <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1 z-10">
+            {images.map((_, i) => (
+              <button
+                key={i}
+                onClick={(e) => { e.stopPropagation(); goTo(i) }}
+                className={`rounded-full transition-all duration-200 ${
+                  i === idx ? "bg-white w-4 h-1.5" : "bg-white/50 w-1.5 h-1.5 hover:bg-white/80"
+                }`}
+                aria-label={`Go to image ${i + 1}`}
+              />
+            ))}
+          </div>
+
+          {/* Counter */}
+          <div className="absolute top-2 right-2 z-10 rounded-full bg-black/50 text-white text-xs px-2 py-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+            {idx + 1} / {images.length}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
+
 export function Events() {
   const [eventsEnabled, setEventsEnabled] = useState(true)
   const [events, setEvents] = useState<Event[]>([])
+  const [loading, setLoading] = useState(true)
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null)
   const [eventAspectById, setEventAspectById] = useState<Record<string, "square" | "portrait">>({})
   const sectionRef = useRef<HTMLElement>(null)
@@ -40,19 +175,40 @@ export function Events() {
   }, [])
 
   useEffect(() => {
-    fetch("/api/events").then((r) => r.json()).then(setEvents).catch(console.error)
+    const loadEvents = async () => {
+      try {
+        const res = await fetch("/api/events")
+        const data = await res.json()
+        setEvents(data)
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadEvents()
   }, [])
 
+  // Determine aspect ratio from first image of each event
   useEffect(() => {
     let cancelled = false
-    const entries = events.filter((e) => e._id && e.image).map((e) => ({ id: e._id, src: e.image! }))
+    const entries = events
+      .filter((e) => e._id && getImages(e).length > 0)
+      .map((e) => ({ id: e._id, src: getImages(e)[0] }))
     if (!entries.length) return
-    Promise.all(entries.map(({ id, src }) => new Promise<{ id: string; aspect: "square" | "portrait" }>((resolve) => {
-      const img = new Image()
-      img.onload = () => { const ratio = img.naturalWidth / img.naturalHeight; resolve({ id, aspect: ratio > 0.95 && ratio < 1.05 ? "square" : "portrait" }) }
-      img.onerror = () => resolve({ id, aspect: "portrait" })
-      img.src = src
-    }))).then((resolved) => {
+    Promise.all(
+      entries.map(({ id, src }) =>
+        new Promise<{ id: string; aspect: "square" | "portrait" }>((resolve) => {
+          const img = new Image()
+          img.onload = () => {
+            const ratio = img.naturalWidth / img.naturalHeight
+            resolve({ id, aspect: ratio > 0.95 && ratio < 1.05 ? "square" : "portrait" })
+          }
+          img.onerror = () => resolve({ id, aspect: "portrait" })
+          img.src = src
+        })
+      )
+    ).then((resolved) => {
       if (cancelled) return
       const next: Record<string, "square" | "portrait"> = {}
       resolved.forEach(({ id, aspect }) => { next[id] = aspect })
@@ -116,31 +272,46 @@ export function Events() {
         {/* Upcoming Events */}
         <div className="mb-16">
           <h3 className="text-2xl font-bold mb-8 gradient-text">Upcoming Events</h3>
-          {upcomingEvents.length > 0 ? (
+          {loading ? (
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6 justify-items-center">
-              {upcomingEvents.map((event) => (
-                <div key={event._id} className="event-card glass-card rounded-2xl p-3 sm:p-4 group cursor-pointer w-full max-w-[320px] border border-white/10 hover:-translate-y-1 transition-transform duration-300" onClick={() => setSelectedEvent(event)}>
-                  <div className="relative bg-black/20 rounded-xl overflow-hidden border border-white/10 mb-4">
-                    <img src={event.image || "/placeholder.svg"} alt={event.title} className={`w-full object-contain p-2 group-hover:scale-[1.02] transition-transform duration-300 ${eventAspectById[event._id] === "square" ? "aspect-square" : "aspect-[3/4]"}`} />
-                    <div className="absolute top-3 right-3 bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-medium">Upcoming</div>
-                  </div>
-                  <h4 className="text-lg font-semibold mb-2 group-hover:text-primary transition-colors line-clamp-2 min-h-[56px]">{event.title}</h4>
-                  <Markdown content={event.description || ""} className="mb-4 text-sm min-h-[60px] max-h-[72px] overflow-hidden [mask-image:linear-gradient(to_bottom,black_75%,transparent)]" />
-                  <div className="space-y-2 text-sm text-muted-foreground mb-4">
-                    <div className="flex items-center space-x-2"><Calendar className="h-4 w-4" style={{ color: "var(--accent-blue)" }} /><span>{new Date(event.date).toLocaleDateString("en-US")}</span></div>
-                    {event.time && <div className="flex items-center space-x-2"><Clock className="h-4 w-4" style={{ color: "var(--accent-blue)" }} /><span>{event.time}</span></div>}
-                    {event.location && <div className="flex items-center space-x-2"><MapPin className="h-4 w-4" style={{ color: "var(--accent-blue)" }} /><span className="truncate">{event.location}</span></div>}
-                  </div>
-                  {event.googleFormLink && (
-                    <button
-                      onClick={(e) => handleRegister(e, event.googleFormLink!)}
-                      className="inline-flex w-full justify-center bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium transition-transform hover:scale-[1.02]"
-                    >
-                      Register
-                    </button>
-                  )}
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="glass-card rounded-2xl p-3 sm:p-4 w-full max-w-[320px] border border-white/10 animate-pulse">
+                  <div className="aspect-[3/4] rounded-xl bg-white/5 mb-4" />
+                  <div className="h-4 rounded bg-white/10 mb-2 w-3/4" />
+                  <div className="h-3 rounded bg-white/5 mb-1 w-full" />
+                  <div className="h-3 rounded bg-white/5 mb-4 w-2/3" />
+                  <div className="h-3 rounded bg-white/5 mb-1 w-1/2" />
                 </div>
               ))}
+            </div>
+          ) : upcomingEvents.length > 0 ? (
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6 justify-items-center">
+              {upcomingEvents.map((event) => {
+                const imgs = getImages(event)
+                return (
+                  <div key={event._id} className="event-card glass-card rounded-2xl p-3 sm:p-4 group cursor-pointer w-full max-w-[320px] border border-white/10 hover:-translate-y-1 transition-transform duration-300" onClick={() => setSelectedEvent(event)}>
+                    <div className={`relative bg-black/20 rounded-xl overflow-hidden border border-white/10 mb-4 ${eventAspectById[event._id] === "square" ? "aspect-square" : "aspect-[3/4]"}`}>
+                      <ImageCarousel images={imgs} alt={event.title} className="absolute inset-0" />
+                      <div className="absolute top-3 right-3 bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-medium z-20">Upcoming</div>
+                    </div>
+                    <h4 className="text-lg font-semibold mb-2 group-hover:text-primary transition-colors line-clamp-2 min-h-[56px]">{event.title}</h4>
+                    <Markdown content={event.description || ""} className="mb-4 text-sm min-h-[60px] max-h-[72px] overflow-hidden [mask-image:linear-gradient(to_bottom,black_75%,transparent)]" />
+                    <div className="space-y-2 text-sm text-muted-foreground mb-4">
+                      <div className="flex items-center space-x-2"><Calendar className="h-4 w-4" style={{ color: "var(--accent-blue)" }} /><span>{new Date(event.date).toLocaleDateString("en-US")}</span></div>
+                      {event.time && <div className="flex items-center space-x-2"><Clock className="h-4 w-4" style={{ color: "var(--accent-blue)" }} /><span>{event.time}</span></div>}
+                      {event.location && <div className="flex items-center space-x-2"><MapPin className="h-4 w-4" style={{ color: "var(--accent-blue)" }} /><span className="truncate">{event.location}</span></div>}
+                    </div>
+                    {event.googleFormLink && (
+                      <button
+                        onClick={(e) => handleRegister(e, event.googleFormLink!)}
+                        className="inline-flex w-full justify-center bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium transition-transform hover:scale-[1.02]"
+                      >
+                        Register
+                      </button>
+                    )}
+                  </div>
+                )
+              })}
             </div>
           ) : (
             <p className="text-center text-muted-foreground">No upcoming events available.</p>
@@ -150,19 +321,33 @@ export function Events() {
         {/* Past Events */}
         <div>
           <h3 className="text-2xl font-bold mb-8 gradient-text">Past Events</h3>
-          {pastEvents.length > 0 ? (
+          {loading ? (
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 justify-items-center">
-              {pastEvents.map((event) => (
-                <div key={event._id} className="event-card glass-card rounded-2xl p-3 sm:p-4 group cursor-pointer opacity-80 hover:opacity-100 transition-opacity w-full max-w-[300px] border border-white/10 hover:-translate-y-1 transition-transform duration-300" onClick={() => setSelectedEvent(event)}>
-                  <div className="relative bg-black/20 rounded-xl overflow-hidden border border-white/10 mb-4">
-                    <img src={event.image || "/placeholder.svg"} alt={event.title} className={`w-full object-contain p-2 group-hover:scale-[1.02] transition-transform duration-300 ${eventAspectById[event._id] === "square" ? "aspect-square" : "aspect-[3/4]"}`} />
-                    <div className="absolute top-2 right-2 bg-muted text-muted-foreground px-2 py-1 rounded-full text-xs">Completed</div>
-                  </div>
-                  <h4 className="text-base font-semibold mb-2 group-hover:text-primary transition-colors line-clamp-2 min-h-[48px]">{event.title}</h4>
-                  <Markdown content={event.description || ""} className="text-xs mb-3 min-h-[36px] max-h-[56px] overflow-hidden [mask-image:linear-gradient(to_bottom,black_75%,transparent)]" />
-                  <div className="flex items-center justify-between text-xs text-muted-foreground"><span>{new Date(event.date).toLocaleDateString("en-US")}</span></div>
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="glass-card rounded-2xl p-3 sm:p-4 w-full max-w-[300px] border border-white/10 animate-pulse">
+                  <div className="aspect-[3/4] rounded-xl bg-white/5 mb-4" />
+                  <div className="h-4 rounded bg-white/10 mb-2 w-3/4" />
+                  <div className="h-3 rounded bg-white/5 mb-1 w-full" />
+                  <div className="h-3 rounded bg-white/5 w-1/3" />
                 </div>
               ))}
+            </div>
+          ) : pastEvents.length > 0 ? (
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 justify-items-center">
+              {pastEvents.map((event) => {
+                const imgs = getImages(event)
+                return (
+                  <div key={event._id} className="event-card glass-card rounded-2xl p-3 sm:p-4 group cursor-pointer opacity-80 hover:opacity-100 w-full max-w-[300px] border border-white/10 hover:-translate-y-1 transition-all duration-300" onClick={() => setSelectedEvent(event)}>
+                    <div className={`relative bg-black/20 rounded-xl overflow-hidden border border-white/10 mb-4 ${eventAspectById[event._id] === "square" ? "aspect-square" : "aspect-[3/4]"}`}>
+                      <ImageCarousel images={imgs} alt={event.title} className="absolute inset-0" />
+                      <div className="absolute top-2 right-2 bg-muted text-muted-foreground px-2 py-1 rounded-full text-xs z-20">Completed</div>
+                    </div>
+                    <h4 className="text-base font-semibold mb-2 group-hover:text-primary transition-colors line-clamp-2 min-h-[48px]">{event.title}</h4>
+                    <Markdown content={event.description || ""} className="text-xs mb-3 min-h-[36px] max-h-[56px] overflow-hidden [mask-image:linear-gradient(to_bottom,black_75%,transparent)]" />
+                    <div className="flex items-center justify-between text-xs text-muted-foreground"><span>{new Date(event.date).toLocaleDateString("en-US")}</span></div>
+                  </div>
+                )
+              })}
             </div>
           ) : (
             <p className="text-center text-muted-foreground">No past events available.</p>
@@ -170,40 +355,62 @@ export function Events() {
         </div>
       </div>
 
+      {/* Event Detail Dialog */}
       <Dialog open={!!selectedEvent} onOpenChange={(open) => !open && setSelectedEvent(null)}>
         <DialogContent className="w-[calc(100%-1rem)] sm:max-w-4xl p-4 md:p-6 bg-background border border-border shadow-2xl max-h-[88vh] overflow-y-auto">
-          {selectedEvent && (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-[44%_56%] gap-5 md:gap-6 items-start">
-                <div className="rounded-xl border border-white/10 bg-black/20 overflow-hidden">
-                  <img src={selectedEvent.image || "/placeholder.svg"} alt={selectedEvent.title} className={`w-full object-contain p-2 ${eventAspectById[selectedEvent._id] === "square" ? "aspect-square" : "aspect-[3/4]"} max-h-[42vh]`} />
-                </div>
-                <div className="space-y-4">
-                  <DialogHeader>
-                    <DialogTitle className="text-xl md:text-2xl leading-tight pr-8">{selectedEvent.title}</DialogTitle>
-                  </DialogHeader>
-                  <Markdown content={selectedEvent.description || "No description provided."} className="text-sm leading-relaxed text-muted-foreground" />
-                  <div className="rounded-xl border border-white/10 bg-white/5 p-3 space-y-2 text-sm">
-                    <div className="flex items-center gap-2 text-muted-foreground"><Calendar className="h-4 w-4" style={{ color: "var(--accent-blue)" }} /><span>{new Date(selectedEvent.date).toLocaleDateString("en-US")}</span></div>
-                    {selectedEvent.time && <div className="flex items-center gap-2 text-muted-foreground"><Clock className="h-4 w-4" style={{ color: "var(--accent-blue)" }} /><span>{selectedEvent.time}</span></div>}
-                    {selectedEvent.location && <div className="flex items-center gap-2 text-muted-foreground"><MapPin className="h-4 w-4" style={{ color: "var(--accent-blue)" }} /><span>{selectedEvent.location}</span></div>}
+          {selectedEvent && (() => {
+            const imgs = getImages(selectedEvent)
+            return (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-[44%_56%] gap-5 md:gap-6 items-start">
+                  {/* Carousel in dialog */}
+                  <div className={`rounded-xl border border-white/10 bg-black/20 overflow-hidden relative ${eventAspectById[selectedEvent._id] === "square" ? "aspect-square" : "aspect-[3/4]"} max-h-[42vh]`}>
+                    <ImageCarousel images={imgs} alt={selectedEvent.title} className="absolute inset-0" large />
                   </div>
-                  {selectedEvent.googleFormLink && isUpcomingEvent(selectedEvent) && (
-                    <button
-                      onClick={(e) => handleRegister(e, selectedEvent.googleFormLink!)}
-                      className="inline-flex w-full md:w-auto justify-center bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium transition-transform hover:scale-[1.02]"
-                    >
-                      Register
-                    </button>
-                  )}
+                  <div className="space-y-4">
+                    <DialogHeader>
+                      <DialogTitle className="text-xl md:text-2xl leading-tight pr-8">{selectedEvent.title}</DialogTitle>
+                    </DialogHeader>
+                    <Markdown content={selectedEvent.description || "No description provided."} className="text-sm leading-relaxed text-muted-foreground" />
+                    <div className="rounded-xl border border-white/10 bg-white/5 p-3 space-y-2 text-sm">
+                      <div className="flex items-center gap-2 text-muted-foreground"><Calendar className="h-4 w-4" style={{ color: "var(--accent-blue)" }} /><span>{new Date(selectedEvent.date).toLocaleDateString("en-US")}</span></div>
+                      {selectedEvent.time && <div className="flex items-center gap-2 text-muted-foreground"><Clock className="h-4 w-4" style={{ color: "var(--accent-blue)" }} /><span>{selectedEvent.time}</span></div>}
+                      {selectedEvent.location && <div className="flex items-center gap-2 text-muted-foreground"><MapPin className="h-4 w-4" style={{ color: "var(--accent-blue)" }} /><span>{selectedEvent.location}</span></div>}
+                    </div>
+                    {imgs.length > 1 && (
+                      <p className="text-xs text-muted-foreground">{imgs.length} photos · swipe or use arrows to browse</p>
+                    )}
+                    {selectedEvent.googleFormLink && isUpcomingEvent(selectedEvent) && (
+                      <button
+                        onClick={(e) => handleRegister(e, selectedEvent.googleFormLink!)}
+                        className="inline-flex w-full md:w-auto justify-center bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium transition-transform hover:scale-[1.02]"
+                      >
+                        Register
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </>
-          )}
+
+                {/* Thumbnail strip (if more than 1 image) */}
+                {imgs.length > 1 && (
+                  <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
+                    {imgs.map((src, i) => (
+                      <img
+                        key={i}
+                        src={src}
+                        alt={`${selectedEvent.title} photo ${i + 1}`}
+                        className="h-16 w-16 rounded-lg object-cover border border-white/10 flex-shrink-0 cursor-pointer hover:border-primary/60 transition-colors"
+                      />
+                    ))}
+                  </div>
+                )}
+              </>
+            )
+          })()}
         </DialogContent>
       </Dialog>
 
-      {/* Auth Modal — shown when unauthenticated user clicks Register */}
+      {/* Auth Modal */}
       <AuthModal
         open={authModalOpen}
         onOpenChange={setAuthModalOpen}
