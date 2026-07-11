@@ -311,7 +311,7 @@ export function Hero() {
           <PanelPreview>
             <div
               onClick={handleMiniPanelClick}
-              className={`origin-center scale-50 opacity-0 transition-all duration-500 ease-in hover:scale-100 hover:opacity-100 size-40 sm:size-64 bg-gradient-to-br ${next.bg} rounded-xl flex flex-col items-center justify-center gap-2 border relative overflow-hidden`}
+              className={`origin-center transition-all duration-500 ease-out hover:scale-105 hover:brightness-110 size-40 sm:size-64 bg-gradient-to-br ${next.bg} rounded-xl flex flex-col items-center justify-center gap-2 border relative overflow-hidden`}
               style={{ borderColor: `${next.accent}40` }}
             >
               {/* Glow ring behind image */}
