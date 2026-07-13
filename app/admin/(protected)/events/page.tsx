@@ -52,6 +52,25 @@ export default function EventsAdminPage() {
   const [editCropSrc, setEditCropSrc] = useState<string | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
+  const [addUploading, setAddUploading] = useState(false)
+  const [editUploading, setEditUploading] = useState(false)
+
+  /** Upload a base64 dataUrl to Cloudinary via our server route and return the secure URL */
+  async function uploadToCloudinary(dataUrl: string): Promise<string | null> {
+    try {
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dataUrl }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.detail || json.error || "Unknown error")
+      return json.url as string
+    } catch (err) {
+      console.error("Cloudinary upload failed:", err)
+      return null
+    }
+  }
 
   useEffect(() => {
     fetch("/api/events")
@@ -374,6 +393,13 @@ export default function EventsAdminPage() {
             </div>
           </div>
 
+          {addUploading && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground animate-pulse">
+              <span className="inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              Uploading to Cloudinary…
+            </div>
+          )}
+
           {aImages.length > 0 && (
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
               {aImages.map((src, idx) => (
@@ -496,8 +522,13 @@ export default function EventsAdminPage() {
         open={addCropOpen}
         onOpenChange={setAddCropOpen}
         src={addCropSrc || "/placeholder.svg?height=512&width=512&query=event%20thumbnail"} 
-        onCropped={(dataUrl) => {
-          if (dataUrl) setAImages(prev => [...prev, dataUrl])
+        onCropped={async (dataUrl) => {
+          if (!dataUrl) return
+          setAddUploading(true)
+          const url = await uploadToCloudinary(dataUrl)
+          setAddUploading(false)
+          if (url) setAImages(prev => [...prev, url])
+          else alert("Image upload failed. Please try again.")
         }}
         aspect={ratioAspect(aImageRatio)}
         outputWidth={ratioOutput(aImageRatio).w}
@@ -508,8 +539,13 @@ export default function EventsAdminPage() {
         open={editCropOpen}
         onOpenChange={setEditCropOpen}
         src={editCropSrc || "/placeholder.svg?height=512&width=512&query=event%20thumbnail"} 
-        onCropped={(dataUrl) => {
-          if (dataUrl) setEImages(prev => [...prev, dataUrl])
+        onCropped={async (dataUrl) => {
+          if (!dataUrl) return
+          setEditUploading(true)
+          const url = await uploadToCloudinary(dataUrl)
+          setEditUploading(false)
+          if (url) setEImages(prev => [...prev, url])
+          else alert("Image upload failed. Please try again.")
         }}
         aspect={ratioAspect(eImageRatio)}
         outputWidth={ratioOutput(eImageRatio).w}
@@ -560,6 +596,13 @@ export default function EventsAdminPage() {
                 <p>Drag & drop here, or click to select</p>
               </div>
             </div>
+
+            {editUploading && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground animate-pulse">
+                <span className="inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                Uploading to Cloudinary…
+              </div>
+            )}
 
             {eImages.length > 0 && (
               <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
