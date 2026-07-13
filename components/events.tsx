@@ -156,10 +156,26 @@ function ImageCarousel({ images, alt, className = "", large = false }: CarouselP
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
+const UPCOMING_LIMIT = 8
+const PAST_LIMIT = 8
+
 export function Events() {
   const [eventsEnabled, setEventsEnabled] = useState(true)
-  const [events, setEvents] = useState<Event[]>([])
-  const [loading, setLoading] = useState(true)
+
+  // Upcoming events pagination
+  const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([])
+  const [upcomingPage, setUpcomingPage] = useState(1)
+  const [upcomingTotalPages, setUpcomingTotalPages] = useState(1)
+  const [upcomingTotal, setUpcomingTotal] = useState<number | null>(null)
+  const [upcomingLoading, setUpcomingLoading] = useState(true)
+
+  // Past events pagination
+  const [pastEvents, setPastEvents] = useState<Event[]>([])
+  const [pastPage, setPastPage] = useState(1)
+  const [pastTotalPages, setPastTotalPages] = useState(1)
+  const [pastTotal, setPastTotal] = useState<number | null>(null)
+  const [pastLoading, setPastLoading] = useState(true)
+
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null)
   const [eventAspectById, setEventAspectById] = useState<Record<string, "square" | "portrait">>({})
   const sectionRef = useRef<HTMLElement>(null)
@@ -174,25 +190,55 @@ export function Events() {
       .catch(() => setEventsEnabled(true))
   }, [])
 
+  // Fetch upcoming events whenever upcomingPage changes
   useEffect(() => {
-    const loadEvents = async () => {
+    const load = async () => {
+      setUpcomingLoading(true)
       try {
-        const res = await fetch("/api/events")
+        // Pass knownTotal on page 2+ to skip the countDocuments round-trip
+        const totalParam = upcomingTotal !== null && upcomingPage > 1 ? `&knownTotal=${upcomingTotal}` : ""
+        const res = await fetch(`/api/events?page=${upcomingPage}&limit=${UPCOMING_LIMIT}&type=upcoming${totalParam}`)
         const data = await res.json()
-        setEvents(data)
+        setUpcomingEvents(data.events ?? [])
+        setUpcomingTotalPages(data.totalPages ?? 1)
+        if (data.total !== undefined) setUpcomingTotal(data.total)
       } catch (err) {
         console.error(err)
       } finally {
-        setLoading(false)
+        setUpcomingLoading(false)
       }
     }
-    loadEvents()
-  }, [])
+    load()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [upcomingPage])
 
-  // Determine aspect ratio from first image of each event
+  // Fetch past events whenever pastPage changes
+  useEffect(() => {
+    const load = async () => {
+      setPastLoading(true)
+      try {
+        // Pass knownTotal on page 2+ to skip the countDocuments round-trip
+        const totalParam = pastTotal !== null && pastPage > 1 ? `&knownTotal=${pastTotal}` : ""
+        const res = await fetch(`/api/events?page=${pastPage}&limit=${PAST_LIMIT}&type=past${totalParam}`)
+        const data = await res.json()
+        setPastEvents(data.events ?? [])
+        setPastTotalPages(data.totalPages ?? 1)
+        if (data.total !== undefined) setPastTotal(data.total)
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setPastLoading(false)
+      }
+    }
+    load()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pastPage])
+
+  // Determine aspect ratio from first image of each event (runs whenever either page changes)
+  const allPageEvents = [...upcomingEvents, ...pastEvents]
   useEffect(() => {
     let cancelled = false
-    const entries = events
+    const entries = allPageEvents
       .filter((e) => e._id && getImages(e).length > 0)
       .map((e) => ({ id: e._id, src: getImages(e)[0] }))
     if (!entries.length) return
@@ -212,13 +258,16 @@ export function Events() {
       if (cancelled) return
       const next: Record<string, "square" | "portrait"> = {}
       resolved.forEach(({ id, aspect }) => { next[id] = aspect })
-      setEventAspectById(next)
+      setEventAspectById((prev) => ({ ...prev, ...next }))
     })
     return () => { cancelled = true }
-  }, [events])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [upcomingEvents, pastEvents])
+
+  const isLoading = upcomingLoading && pastLoading
 
   useEffect(() => {
-    if (!events.length) return
+    if (isLoading) return
     const ctx = gsap.context(() => {
       gsap.fromTo(".events-heading", { opacity: 0, y: 50 }, {
         opacity: 1, y: 0, duration: 0.8, ease: "power3.out",
@@ -230,12 +279,9 @@ export function Events() {
       })
     }, sectionRef)
     return () => ctx.revert()
-  }, [events])
+  }, [isLoading])
 
-  const now = new Date()
-  const isUpcomingEvent = (e: Event) => new Date(e.date) >= now
-  const upcomingEvents = events.filter(isUpcomingEvent)
-  const pastEvents = events.filter((e) => !isUpcomingEvent(e))
+  const isUpcomingEvent = (e: Event) => new Date(e.date) >= new Date()
 
   const handleRegister = (e: React.MouseEvent, formLink: string) => {
     e.stopPropagation()
@@ -272,7 +318,7 @@ export function Events() {
         {/* Upcoming Events */}
         <div className="mb-16">
           <h3 className="text-2xl font-bold mb-8 gradient-text">Upcoming Events</h3>
-          {loading ? (
+          {upcomingLoading ? (
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6 justify-items-center">
               {Array.from({ length: 4 }).map((_, i) => (
                 <div key={i} className="glass-card rounded-2xl p-3 sm:p-4 w-full max-w-[320px] border border-white/10 animate-pulse">
@@ -285,34 +331,60 @@ export function Events() {
               ))}
             </div>
           ) : upcomingEvents.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6 justify-items-center">
-              {upcomingEvents.map((event) => {
-                const imgs = getImages(event)
-                return (
-                  <div key={event._id} className="event-card glass-card rounded-2xl p-3 sm:p-4 group cursor-pointer w-full max-w-[320px] border border-white/10 hover:-translate-y-1 transition-transform duration-300" onClick={() => setSelectedEvent(event)}>
-                    <div className={`relative bg-black/20 rounded-xl overflow-hidden border border-white/10 mb-4 ${eventAspectById[event._id] === "square" ? "aspect-square" : "aspect-[3/4]"}`}>
-                      <ImageCarousel images={imgs} alt={event.title} className="absolute inset-0" />
-                      <div className="absolute top-3 right-3 bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-medium z-20">Upcoming</div>
+            <>
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6 justify-items-center">
+                {upcomingEvents.map((event) => {
+                  const imgs = getImages(event)
+                  return (
+                    <div key={event._id} className="event-card glass-card rounded-2xl p-3 sm:p-4 group cursor-pointer w-full max-w-[320px] border border-white/10 hover:-translate-y-1 transition-transform duration-300" onClick={() => setSelectedEvent(event)}>
+                      <div className={`relative bg-black/20 rounded-xl overflow-hidden border border-white/10 mb-4 ${eventAspectById[event._id] === "square" ? "aspect-square" : "aspect-[3/4]"}`}>
+                        <ImageCarousel images={imgs} alt={event.title} className="absolute inset-0" />
+                        <div className="absolute top-3 right-3 bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-medium z-20">Upcoming</div>
+                      </div>
+                      <h4 className="text-lg font-semibold mb-2 group-hover:text-primary transition-colors line-clamp-2 min-h-[56px]">{event.title}</h4>
+                      <Markdown content={event.description || ""} className="mb-4 text-sm min-h-[60px] max-h-[72px] overflow-hidden [mask-image:linear-gradient(to_bottom,black_75%,transparent)]" />
+                      <div className="space-y-2 text-sm text-muted-foreground mb-4">
+                        <div className="flex items-center space-x-2"><Calendar className="h-4 w-4" style={{ color: "var(--accent-blue)" }} /><span>{new Date(event.date).toLocaleDateString("en-US")}</span></div>
+                        {event.time && <div className="flex items-center space-x-2"><Clock className="h-4 w-4" style={{ color: "var(--accent-blue)" }} /><span>{event.time}</span></div>}
+                        {event.location && <div className="flex items-center space-x-2"><MapPin className="h-4 w-4" style={{ color: "var(--accent-blue)" }} /><span className="truncate">{event.location}</span></div>}
+                      </div>
+                      {event.googleFormLink && (
+                        <button
+                          onClick={(e) => handleRegister(e, event.googleFormLink!)}
+                          className="inline-flex w-full justify-center bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium transition-transform hover:scale-[1.02]"
+                        >
+                          Register
+                        </button>
+                      )}
                     </div>
-                    <h4 className="text-lg font-semibold mb-2 group-hover:text-primary transition-colors line-clamp-2 min-h-[56px]">{event.title}</h4>
-                    <Markdown content={event.description || ""} className="mb-4 text-sm min-h-[60px] max-h-[72px] overflow-hidden [mask-image:linear-gradient(to_bottom,black_75%,transparent)]" />
-                    <div className="space-y-2 text-sm text-muted-foreground mb-4">
-                      <div className="flex items-center space-x-2"><Calendar className="h-4 w-4" style={{ color: "var(--accent-blue)" }} /><span>{new Date(event.date).toLocaleDateString("en-US")}</span></div>
-                      {event.time && <div className="flex items-center space-x-2"><Clock className="h-4 w-4" style={{ color: "var(--accent-blue)" }} /><span>{event.time}</span></div>}
-                      {event.location && <div className="flex items-center space-x-2"><MapPin className="h-4 w-4" style={{ color: "var(--accent-blue)" }} /><span className="truncate">{event.location}</span></div>}
-                    </div>
-                    {event.googleFormLink && (
-                      <button
-                        onClick={(e) => handleRegister(e, event.googleFormLink!)}
-                        className="inline-flex w-full justify-center bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium transition-transform hover:scale-[1.02]"
-                      >
-                        Register
-                      </button>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
+                  )
+                })}
+              </div>
+              {/* Upcoming pagination */}
+              {upcomingTotalPages > 1 && (
+                <div className="flex items-center justify-center gap-3 mt-8">
+                  <button
+                    onClick={() => setUpcomingPage((p) => Math.max(1, p - 1))}
+                    disabled={upcomingPage === 1}
+                    className="p-2 rounded-lg glass-card border border-white/10 disabled:opacity-30 hover:border-primary/50 transition-colors"
+                    aria-label="Previous page"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                  <span className="text-sm text-muted-foreground">
+                    Page {upcomingPage} of {upcomingTotalPages}
+                  </span>
+                  <button
+                    onClick={() => setUpcomingPage((p) => Math.min(upcomingTotalPages, p + 1))}
+                    disabled={upcomingPage === upcomingTotalPages}
+                    className="p-2 rounded-lg glass-card border border-white/10 disabled:opacity-30 hover:border-primary/50 transition-colors"
+                    aria-label="Next page"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
+            </>
           ) : (
             <p className="text-center text-muted-foreground">No upcoming events available.</p>
           )}
@@ -321,7 +393,7 @@ export function Events() {
         {/* Past Events */}
         <div>
           <h3 className="text-2xl font-bold mb-8 gradient-text">Past Events</h3>
-          {loading ? (
+          {pastLoading ? (
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 justify-items-center">
               {Array.from({ length: 4 }).map((_, i) => (
                 <div key={i} className="glass-card rounded-2xl p-3 sm:p-4 w-full max-w-[300px] border border-white/10 animate-pulse">
@@ -333,22 +405,48 @@ export function Events() {
               ))}
             </div>
           ) : pastEvents.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 justify-items-center">
-              {pastEvents.map((event) => {
-                const imgs = getImages(event)
-                return (
-                  <div key={event._id} className="event-card glass-card rounded-2xl p-3 sm:p-4 group cursor-pointer opacity-80 hover:opacity-100 w-full max-w-[300px] border border-white/10 hover:-translate-y-1 transition-all duration-300" onClick={() => setSelectedEvent(event)}>
-                    <div className={`relative bg-black/20 rounded-xl overflow-hidden border border-white/10 mb-4 ${eventAspectById[event._id] === "square" ? "aspect-square" : "aspect-[3/4]"}`}>
-                      <ImageCarousel images={imgs} alt={event.title} className="absolute inset-0" />
-                      <div className="absolute top-2 right-2 bg-muted text-muted-foreground px-2 py-1 rounded-full text-xs z-20">Completed</div>
+            <>
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 justify-items-center">
+                {pastEvents.map((event) => {
+                  const imgs = getImages(event)
+                  return (
+                    <div key={event._id} className="event-card glass-card rounded-2xl p-3 sm:p-4 group cursor-pointer opacity-80 hover:opacity-100 w-full max-w-[300px] border border-white/10 hover:-translate-y-1 transition-all duration-300" onClick={() => setSelectedEvent(event)}>
+                      <div className={`relative bg-black/20 rounded-xl overflow-hidden border border-white/10 mb-4 ${eventAspectById[event._id] === "square" ? "aspect-square" : "aspect-[3/4]"}`}>
+                        <ImageCarousel images={imgs} alt={event.title} className="absolute inset-0" />
+                        <div className="absolute top-2 right-2 bg-muted text-muted-foreground px-2 py-1 rounded-full text-xs z-20">Completed</div>
+                      </div>
+                      <h4 className="text-base font-semibold mb-2 group-hover:text-primary transition-colors line-clamp-2 min-h-[48px]">{event.title}</h4>
+                      <Markdown content={event.description || ""} className="text-xs mb-3 min-h-[36px] max-h-[56px] overflow-hidden [mask-image:linear-gradient(to_bottom,black_75%,transparent)]" />
+                      <div className="flex items-center justify-between text-xs text-muted-foreground"><span>{new Date(event.date).toLocaleDateString("en-US")}</span></div>
                     </div>
-                    <h4 className="text-base font-semibold mb-2 group-hover:text-primary transition-colors line-clamp-2 min-h-[48px]">{event.title}</h4>
-                    <Markdown content={event.description || ""} className="text-xs mb-3 min-h-[36px] max-h-[56px] overflow-hidden [mask-image:linear-gradient(to_bottom,black_75%,transparent)]" />
-                    <div className="flex items-center justify-between text-xs text-muted-foreground"><span>{new Date(event.date).toLocaleDateString("en-US")}</span></div>
-                  </div>
-                )
-              })}
-            </div>
+                  )
+                })}
+              </div>
+              {/* Past events pagination */}
+              {pastTotalPages > 1 && (
+                <div className="flex items-center justify-center gap-3 mt-8">
+                  <button
+                    onClick={() => setPastPage((p) => Math.max(1, p - 1))}
+                    disabled={pastPage === 1}
+                    className="p-2 rounded-lg glass-card border border-white/10 disabled:opacity-30 hover:border-primary/50 transition-colors"
+                    aria-label="Previous page"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                  <span className="text-sm text-muted-foreground">
+                    Page {pastPage} of {pastTotalPages}
+                  </span>
+                  <button
+                    onClick={() => setPastPage((p) => Math.min(pastTotalPages, p + 1))}
+                    disabled={pastPage === pastTotalPages}
+                    className="p-2 rounded-lg glass-card border border-white/10 disabled:opacity-30 hover:border-primary/50 transition-colors"
+                    aria-label="Next page"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
+            </>
           ) : (
             <p className="text-center text-muted-foreground">No past events available.</p>
           )}

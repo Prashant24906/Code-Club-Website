@@ -5,9 +5,10 @@ const eventSchema = new mongoose.Schema(
     image: String,               // legacy single-image (backward compat)
     images: { type: [String], default: [] }, // new multi-image array
     title: { type: String, required: true },
-    date: Date,
+    date: { type: Date, index: true }, // indexed for fast range queries
     description: String,
     location: String,
+    time: String,
     googleFormLink: String,
   },
   { timestamps: true }
