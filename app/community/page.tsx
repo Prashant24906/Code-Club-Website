@@ -18,7 +18,7 @@ export default function CommunityPage() {
         <PageHero
           title="Our"
           highlight="Communities"
-          subtitle="9 active WhatsApp groups covering every tech domain — pick your niche and join the conversation."
+          subtitle="Active WhatsApp groups covering every tech domain — pick your niche and join the conversation."
           badge="WhatsApp Groups"
         />
         <Community />
