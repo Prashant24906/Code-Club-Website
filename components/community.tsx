@@ -55,6 +55,7 @@ export function Community() {
   const cardsRef = useRef<HTMLDivElement>(null)
   const ctaRef = useRef<HTMLDivElement>(null)
   const [hoveredId, setHoveredId] = useState<string | null>(null)
+  const [expandedId, setExpandedId] = useState<string | null>(null)
   const [communities, setCommunities] = useState<Community[]>([])
   const [loading, setLoading] = useState(true)
   const [eventsCount, setEventsCount] = useState<number | null>(null)
@@ -199,7 +200,31 @@ export function Community() {
                   </div>
 
                   {/* Description */}
-                  <p className="text-sm text-muted-foreground leading-relaxed mb-4 flex-1">{community.description}</p>
+                  <div className="mb-4 flex-1">
+                    <p
+                      className="text-sm text-muted-foreground leading-relaxed"
+                      style={{
+                        display: "-webkit-box",
+                        WebkitBoxOrient: "vertical",
+                        WebkitLineClamp: expandedId === community.id ? "unset" : 2,
+                        overflow: "hidden",
+                        transition: "all 0.3s ease",
+                      }}
+                    >
+                      {community.description}
+                    </p>
+                    <button
+                      onClick={() =>
+                        setExpandedId((prev) =>
+                          prev === community.id ? null : community.id
+                        )
+                      }
+                      className="mt-1 text-xs font-semibold transition-colors duration-200"
+                      style={{ color: community.color }}
+                    >
+                      {expandedId === community.id ? "See less ↑" : "See more ↓"}
+                    </button>
+                  </div>
 
                   {/* Tags */}
                   <div className="flex flex-wrap gap-1.5 mb-5">
