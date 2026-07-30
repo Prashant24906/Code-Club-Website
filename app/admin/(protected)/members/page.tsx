@@ -51,6 +51,8 @@ export default function MembersAdminPage() {
   const [addingCustomDept, setAddingCustomDept] = useState(false)
   const [customDept, setCustomDept] = useState("")
   const [image, setImage] = useState<string | undefined>(undefined)
+  const [isUploading, setIsUploading] = useState(false)
+  const [editIsUploading, setEditIsUploading] = useState(false)
   const [isHead, setIsHead] = useState(false)
 
   const [editOpen, setEditOpen] = useState(false)
@@ -123,8 +125,24 @@ export default function MembersAdminPage() {
 
     try {
       setIsSaving(true)
-      // Store base64 data URL directly in MongoDB (M-Pulse pattern)
-      const newMember = { name: name.trim(), role: role.trim(), department: finalDept, image, isHead }
+
+      // Upload image to Cloudinary and store the returned URL
+      let imageUrl = image
+      if (image.startsWith("data:image/")) {
+        const uploadRes = await fetch("/api/upload", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ dataUrl: image, folder: "code-club/members" }),
+        })
+        const uploadData = await uploadRes.json()
+        if (!uploadRes.ok || !uploadData.url) {
+          openAlert("Upload Failed", uploadData.error || "Failed to upload image to Cloudinary.")
+          return
+        }
+        imageUrl = uploadData.url
+      }
+
+      const newMember = { name: name.trim(), role: role.trim(), department: finalDept, image: imageUrl, isHead }
 
       const res = await fetch("/api/members", {
         method: "POST",
@@ -205,8 +223,24 @@ export default function MembersAdminPage() {
 
     try {
       setEditIsSaving(true)
-      // Store base64 directly (M-Pulse pattern — no upload service)
-      const updatedMember = { name: eName.trim(), role: eRole.trim(), department: finalDept, image: eImage, isHead: eIsHead }
+
+      // Upload new image to Cloudinary only if it's a fresh data URL (not already a Cloudinary URL)
+      let imageUrl = eImage
+      if (eImage && eImage.startsWith("data:image/")) {
+        const uploadRes = await fetch("/api/upload", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ dataUrl: eImage, folder: "code-club/members" }),
+        })
+        const uploadData = await uploadRes.json()
+        if (!uploadRes.ok || !uploadData.url) {
+          openAlert("Upload Failed", uploadData.error || "Failed to upload image to Cloudinary.")
+          return
+        }
+        imageUrl = uploadData.url
+      }
+
+      const updatedMember = { name: eName.trim(), role: eRole.trim(), department: finalDept, image: imageUrl, isHead: eIsHead }
 
       const res = await fetch("/api/members", {
         method: "PUT",
@@ -360,7 +394,7 @@ export default function MembersAdminPage() {
 
         <div className="mt-4">
           <Button onClick={addMember} disabled={!canAdd || isSaving} className="bg-cyan-600 hover:bg-cyan-700">
-            {isSaving ? "Saving..." : "Add Member"}
+            {isSaving ? "Uploading & Saving..." : "Add Member"}
           </Button>
         </div>
       </Card>
@@ -426,7 +460,7 @@ export default function MembersAdminPage() {
 
           <DialogFooter className="mt-4 flex justify-between">
             <Button variant="outline" onClick={() => { setEditOpen(false); resetEditForm() }}>Cancel</Button>
-            <Button onClick={saveEdit} disabled={!canEdit || editIsSaving}>{editIsSaving ? "Saving..." : "Save Changes"}</Button>
+            <Button onClick={saveEdit} disabled={!canEdit || editIsSaving}>{editIsSaving ? "Uploading & Saving..." : "Save Changes"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

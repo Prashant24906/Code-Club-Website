@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     api_secret: process.env.CLOUDINARY_API_SECRET,
   });
 
-  const { dataUrl } = await request.json();
+  const { dataUrl, folder } = await request.json();
 
   if (!dataUrl || !dataUrl.startsWith("data:image/")) {
     return new Response(JSON.stringify({ error: "Invalid image data" }), { status: 400 });
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
 
   try {
     const result = await cloudinary.uploader.upload(dataUrl, {
-      folder: "code-club/events",
+      folder: typeof folder === "string" && folder ? folder : "code-club/events",
       resource_type: "image",
     });
 
