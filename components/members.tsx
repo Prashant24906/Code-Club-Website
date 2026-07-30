@@ -8,7 +8,7 @@ import { Users, UserX } from "lucide-react";
 gsap.registerPlugin(ScrollTrigger);
 
 type Member = { _id: string; name: string; role: string; department: string; image: string; isHead: boolean };
-type Department = { name: string; lead: Member | null; members: Member[]; color: string };
+type Department = { name: string; lead: Member | null; coHead: Member | null; members: Member[]; color: string };
 
 export function Members() {
   const [members, setMembers] = useState<Member[]>([]);
@@ -85,15 +85,22 @@ export function Members() {
   const president = executiveTeam.find((m) => /president|predident/i.test(m.role)) ?? executiveTeam.find((m) => m.isHead) ?? executiveTeam[0] ?? null;
   const executiveMembers = executiveTeam.filter((m) => m._id !== president?._id).slice(0, 3);
 
-  const groupedDepartments: Record<string, { name: string; lead: Member | null; members: Member[] }> = members
+  const isCoHead = (m: Member) => /co[\s-]?(head|lead)/i.test(m.role);
+
+  const groupedDepartments: Record<string, { name: string; lead: Member | null; coHead: Member | null; members: Member[] }> = members
     .filter((m) => m.department !== "Core Leadership")
     .reduce((acc, member) => {
       const deptName = member.department || "Uncategorized";
-      if (!acc[deptName]) acc[deptName] = { name: deptName, lead: null, members: [] };
-      if (member.isHead) acc[deptName].lead = member;
-      else acc[deptName].members.push(member);
+      if (!acc[deptName]) acc[deptName] = { name: deptName, lead: null, coHead: null, members: [] };
+      if (member.isHead) {
+        acc[deptName].lead = member;
+      } else if (!acc[deptName].coHead && isCoHead(member)) {
+        acc[deptName].coHead = member;
+      } else {
+        acc[deptName].members.push(member);
+      }
       return acc;
-    }, {} as Record<string, { name: string; lead: Member | null; members: Member[] }>);
+    }, {} as Record<string, { name: string; lead: Member | null; coHead: Member | null; members: Member[] }>);
 
   const departmentColors = ["blue", "emerald", "indigo", "purple", "orange"];
   const departments: Department[] = Object.values(groupedDepartments).map((dept, i) => ({ ...dept, color: departmentColors[i % departmentColors.length] }));
@@ -156,20 +163,23 @@ export function Members() {
               <div className={`glass-card rounded-3xl border overflow-hidden ${getColorClasses(dept.color).border}`}>
                 <div className={`h-1 w-full bg-gradient-to-r ${getColorClasses(dept.color).stripe}`} />
                 <div className="p-5 md:p-7">
+                  {/* Header row */}
                   <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <h3 className="text-2xl font-bold text-foreground">{dept.name}</h3>
                     <div className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-medium ${getColorClasses(dept.color).badge}`}>
                       <Users className="h-4 w-4" />
-                      <span>{dept.members.length + (dept.lead ? 1 : 0)} Members</span>
+                      <span>{dept.members.length + (dept.lead ? 1 : 0) + (dept.coHead ? 1 : 0)} Members</span>
                     </div>
                   </div>
+
+                  {/* Head — full-width prominent card */}
                   {dept.lead && (
-                    <div className="mb-6">
+                    <div className="mb-4">
                       <div className={`glass-card rounded-2xl p-4 sm:p-5 border ${getColorClasses(dept.color).border} max-w-[380px] sm:max-w-none mx-auto hover:-translate-y-1 transition-transform duration-300`}>
                         <div className="grid grid-cols-1 sm:grid-cols-[170px_1fr] gap-4 items-center">
                           <img src={dept.lead.image || "/placeholder.svg"} loading="lazy" alt={dept.lead.name} className="w-[130px] h-[130px] sm:w-[170px] sm:h-[170px] aspect-square rounded-xl object-cover mx-auto" />
                           <div className="min-w-0">
-                            <p className={`inline-flex rounded-full px-3 py-1 text-xs uppercase tracking-wider mb-3 ${getColorClasses(dept.color).badge}`}>Department Lead</p>
+                            <p className={`inline-flex rounded-full px-3 py-1 text-xs uppercase tracking-wider font-semibold mb-3 ${getColorClasses(dept.color).badge}`}>Head</p>
                             <h4 className="text-xl font-semibold text-foreground truncate">{dept.lead.name}</h4>
                             <p className="text-sm text-muted-foreground truncate mb-3">{dept.lead.role}</p>
                             <p className="text-sm text-foreground/85">Leading {dept.name} with focus on execution, mentoring, and quality outcomes.</p>
@@ -178,6 +188,24 @@ export function Members() {
                       </div>
                     </div>
                   )}
+
+                  {/* Co-Head — slightly smaller but still a feature card */}
+                  {dept.coHead && (
+                    <div className="mb-5">
+                      <div className={`glass-card rounded-2xl p-3 sm:p-4 border border-white/10 max-w-[340px] sm:max-w-none mx-auto hover:-translate-y-1 transition-transform duration-300`}>
+                        <div className="grid grid-cols-1 sm:grid-cols-[140px_1fr] gap-4 items-center">
+                          <img src={dept.coHead.image || "/placeholder.svg"} loading="lazy" alt={dept.coHead.name} className="w-[110px] h-[110px] sm:w-[140px] sm:h-[140px] aspect-square rounded-xl object-cover mx-auto" />
+                          <div className="min-w-0">
+                            <p className={`inline-flex rounded-full px-3 py-1 text-xs uppercase tracking-wider font-semibold mb-2 ${getColorClasses(dept.color).badge} opacity-80`}>Co-Head</p>
+                            <h4 className="text-lg font-semibold text-foreground truncate">{dept.coHead.name}</h4>
+                            <p className="text-sm text-muted-foreground truncate">{dept.coHead.role}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Regular members grid */}
                   {dept.members.length > 0 ? (
                     <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 justify-items-center">
                       {dept.members.map((member) => (
@@ -192,7 +220,9 @@ export function Members() {
                       ))}
                     </div>
                   ) : (
-                    <div className="rounded-2xl border border-dashed border-white/20 p-5 text-sm text-muted-foreground text-center">No additional team members listed yet.</div>
+                    !dept.lead && !dept.coHead && (
+                      <div className="rounded-2xl border border-dashed border-white/20 p-5 text-sm text-muted-foreground text-center">No additional team members listed yet.</div>
+                    )
                   )}
                 </div>
               </div>
