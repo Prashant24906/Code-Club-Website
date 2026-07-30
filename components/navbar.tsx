@@ -90,10 +90,8 @@ export function Navbar() {
   const shadowColor = isDark ? "rgba(0,0,0,0.5)" : "rgba(0,0,0,0.12)"
 
   const navItems = [
-    { name: "About", href: "/about" },
     { name: "Members", href: "/members" },
     { name: "Events", href: "/events" },
-    { name: "Quiz", href: "/quiz" },
     { name: "Contact", href: "/contact" },
   ]
 

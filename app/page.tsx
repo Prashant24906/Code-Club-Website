@@ -1,6 +1,6 @@
 import { Navbar } from "@/components/navbar";
 import { Hero } from "@/components/hero";
-import { Motivation } from "@/components/motivation";
+import { About } from "@/components/about";
 import { ParticleBackground } from "@/components/particle-background";
 
 export default function Home() {
@@ -9,7 +9,7 @@ export default function Home() {
       <ParticleBackground />
       <Navbar />
       <Hero />
-      <Motivation />
+      <About />
     </main>
   );
 }
