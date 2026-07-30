@@ -33,13 +33,10 @@ type Community = {
   iconName: string
 }
 
-// ── Static stats ───────────────────────────────────────────────────────────────
-const STATS = [
-  { value: "9+", label: "Active Communities" },
-  { value: "800+", label: "Total Members" },
-  { value: "50+", label: "Events Hosted" },
-  { value: "24/7", label: "Active Discussions" },
-]
+// ── Helper: parse "80+" → 80 ──────────────────────────────────────────────────
+function parseMemberCount(s: string): number {
+  return parseInt(s.replace(/[^0-9]/g, ""), 10) || 0
+}
 
 // ── WhatsApp icon ─────────────────────────────────────────────────────────────
 function WhatsAppIcon({ size = 16 }: { size?: number }) {
@@ -60,14 +57,33 @@ export function Community() {
   const [hoveredId, setHoveredId] = useState<string | null>(null)
   const [communities, setCommunities] = useState<Community[]>([])
   const [loading, setLoading] = useState(true)
+  const [eventsCount, setEventsCount] = useState<number | null>(null)
+  const [clubMembersCount, setClubMembersCount] = useState<number | null>(null)
 
-  // Fetch live data from DB
+  // Fetch communities + supporting stats in parallel
   useEffect(() => {
-    fetch("/api/communities")
-      .then((r) => r.json())
-      .then((data) => { setCommunities(data); setLoading(false) })
-      .catch(() => setLoading(false))
+    Promise.all([
+      fetch("/api/communities").then((r) => r.json()),
+      fetch("/api/events").then((r) => r.json()),
+      fetch("/api/members").then((r) => r.json()),
+    ])
+      .then(([comData, evData, mbData]) => {
+        setCommunities(Array.isArray(comData) ? comData : [])
+        setEventsCount(Array.isArray(evData) ? evData.length : (evData?.total ?? 0))
+        setClubMembersCount(Array.isArray(mbData) ? mbData.length : 0)
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false))
   }, [])
+
+  // Derived stats (computed once communities load)
+  const totalWhatsAppMembers = communities.reduce((acc, c) => acc + parseMemberCount(c.members), 0)
+  const stats = [
+    { value: communities.length > 0 ? String(communities.length) : "—", label: "Active Communities" },
+    { value: totalWhatsAppMembers > 0 ? `${totalWhatsAppMembers}+` : "—", label: "WhatsApp Members" },
+    { value: eventsCount != null ? String(eventsCount) : "—", label: "Events Hosted" },
+    { value: clubMembersCount != null ? String(clubMembersCount) : "—", label: "Club Members" },
+  ]
 
   // GSAP animations
   useEffect(() => {
@@ -119,7 +135,7 @@ export function Community() {
 
         {/* Stats bar */}
         <div ref={statsRef} className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-14">
-          {STATS.map((s) => (
+          {stats.map((s) => (
             <div key={s.label} className="glass-card rounded-2xl p-5 text-center">
               <div className="text-3xl font-black mb-1" style={{ background: "linear-gradient(135deg, #38bdf8, #a78bfa)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
                 {s.value}
