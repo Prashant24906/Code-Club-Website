@@ -357,7 +357,7 @@ export function Hero() {
 
         {/* ── Top-left branding card ────────────────────────────────────── */}
         <div className="absolute left-0 top-0 z-40 size-full">
-          <div className="mt-18 sm:mt-24 px-4 sm:px-10 w-full">
+          <div className="mt-28 sm:mt-24 px-4 sm:px-10 w-full">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 mb-8 sm:mb-10 w-full sm:w-fit p-0 sm:p-5 md:max-w-4xl font-sans transition-all duration-300 group">
               <div className="flex items-center gap-4 w-full sm:w-auto">
                 {/* Logo box */}
@@ -401,13 +401,13 @@ export function Hero() {
                       background: `linear-gradient(to right, ${current.accent}60, ${current.accent}20, transparent)`,
                     }}
                   />
-                  <p className="text-[10px] sm:text-sm md:text-base font-medium text-white/60 leading-tight max-w-2xl">
+                  <p className="hidden sm:block text-[10px] sm:text-sm md:text-base font-medium text-white/60 leading-tight max-w-2xl">
                     {current.sub} —{" "}
                     <span className="font-serif font-medium text-white/50 italic text-[10px] sm:text-sm tracking-wide leading-relaxed">{current.desc.slice(0, 6)}<br />{current.desc.slice(6,24)}<br />{current.desc.slice(24,46)}<br/>{current.desc.slice(46,68)}</span>
                   </p>
 
                   {/* Unified CTA below description */}
-                  <div className="mt-4 sm:mt-6 w-full sm:w-fit">
+                  <div className="mt-3 sm:mt-6 w-full sm:w-fit">
                     <button
                       onClick={handleJoinNow}
                       className="w-full sm:w-fit flex items-center justify-center gap-2 rounded-full py-3 sm:py-2.5 px-6 sm:px-8 text-sm font-bold text-white shadow-lg transition-all duration-300 hover:scale-105 active:scale-95 hover:brightness-110"
