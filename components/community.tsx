@@ -8,6 +8,7 @@ import {
   Zap, Shield, BookOpen, Rocket, ExternalLink, Sparkles,
   type LucideIcon,
 } from "lucide-react"
+import { useCachedCommunities, useDataCache } from "@/lib/data-cache"
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -56,13 +57,31 @@ export function Community() {
   const ctaRef = useRef<HTMLDivElement>(null)
   const [hoveredId, setHoveredId] = useState<string | null>(null)
   const [expandedId, setExpandedId] = useState<string | null>(null)
-  const [communities, setCommunities] = useState<Community[]>([])
-  const [loading, setLoading] = useState(true)
-  const [eventsCount, setEventsCount] = useState<number | null>(null)
-  const [clubMembersCount, setClubMembersCount] = useState<number | null>(null)
 
-  // Fetch communities + supporting stats in parallel
+  // ── Cache ──
+  const cachedCommunities = useCachedCommunities()
+  const { cache } = useDataCache()
+  const cachedEventsCount =
+    cache.upcomingEvents?.data?.total != null && cache.pastEvents?.data?.total != null
+      ? cache.upcomingEvents.data.total + cache.pastEvents.data.total
+      : cache.upcomingEvents?.data?.total ?? null
+  const cachedMembersCount = cache.members?.data?.length ?? null
+
+  const [communities, setCommunities] = useState<Community[]>(cachedCommunities ?? [])
+  const [loading, setLoading] = useState(cachedCommunities === null)
+  const [eventsCount, setEventsCount] = useState<number | null>(cachedEventsCount)
+  const [clubMembersCount, setClubMembersCount] = useState<number | null>(cachedMembersCount)
+
+  // Fetch only what the cache doesn't already have
   useEffect(() => {
+    if (cachedCommunities !== null) {
+      setCommunities(cachedCommunities)
+      setLoading(false)
+      // Still update the derived counts if they weren't in cache
+      if (cachedEventsCount !== null) setEventsCount(cachedEventsCount)
+      if (cachedMembersCount !== null) setClubMembersCount(cachedMembersCount)
+      return
+    }
     Promise.all([
       fetch("/api/communities").then((r) => r.json()),
       fetch("/api/events").then((r) => r.json()),
@@ -75,7 +94,8 @@ export function Community() {
       })
       .catch(() => {})
       .finally(() => setLoading(false))
-  }, [])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cachedCommunities])
 
   // Derived stats (computed once communities load)
   const totalWhatsAppMembers = communities.reduce((acc, c) => acc + parseMemberCount(c.members), 0)

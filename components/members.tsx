@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Users, UserX } from "lucide-react";
+import { useCachedMembers } from "@/lib/data-cache";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -11,17 +12,25 @@ type Member = { _id: string; name: string; role: string; department: string; ima
 type Department = { name: string; lead: Member | null; coHead: Member | null; members: Member[]; color: string };
 
 export function Members() {
-  const [members, setMembers] = useState<Member[]>([]);
-  const [loading, setLoading] = useState(true);
+  const cachedMembers = useCachedMembers();
+  const [members, setMembers] = useState<Member[]>(cachedMembers ?? []);
+  const [loading, setLoading] = useState(cachedMembers === null);
   const [error, setError] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
+    // If cache already provided data, skip the fetch entirely
+    if (cachedMembers !== null) {
+      setMembers(cachedMembers);
+      setLoading(false);
+      return;
+    }
     fetch("/api/members")
       .then((res) => res.json())
       .then((data) => { setMembers(data); setLoading(false); })
       .catch(() => { setError(true); setLoading(false); });
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cachedMembers]);
 
   useEffect(() => {
     if (!members.length) return;

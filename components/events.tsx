@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Markdown } from "@/components/ui/markdown"
 import { useUser } from "@/hooks/use-user"
 import { AuthModal } from "@/components/auth-modal"
+import { useCachedEvents } from "@/lib/data-cache"
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -162,19 +163,22 @@ const PAST_LIMIT = 8
 export function Events() {
   const [eventsEnabled, setEventsEnabled] = useState(true)
 
+  // ── Cache seed for page-1 data ──
+  const cachedEvents = useCachedEvents()
+
   // Upcoming events pagination
-  const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([])
+  const [upcomingEvents, setUpcomingEvents] = useState<Event[]>(cachedEvents.upcoming?.events ?? [])
   const [upcomingPage, setUpcomingPage] = useState(1)
-  const [upcomingTotalPages, setUpcomingTotalPages] = useState(1)
-  const [upcomingTotal, setUpcomingTotal] = useState<number | null>(null)
-  const [upcomingLoading, setUpcomingLoading] = useState(true)
+  const [upcomingTotalPages, setUpcomingTotalPages] = useState(cachedEvents.upcoming?.totalPages ?? 1)
+  const [upcomingTotal, setUpcomingTotal] = useState<number | null>(cachedEvents.upcoming?.total ?? null)
+  const [upcomingLoading, setUpcomingLoading] = useState(cachedEvents.upcoming === null)
 
   // Past events pagination
-  const [pastEvents, setPastEvents] = useState<Event[]>([])
+  const [pastEvents, setPastEvents] = useState<Event[]>(cachedEvents.past?.events ?? [])
   const [pastPage, setPastPage] = useState(1)
-  const [pastTotalPages, setPastTotalPages] = useState(1)
-  const [pastTotal, setPastTotal] = useState<number | null>(null)
-  const [pastLoading, setPastLoading] = useState(true)
+  const [pastTotalPages, setPastTotalPages] = useState(cachedEvents.past?.totalPages ?? 1)
+  const [pastTotal, setPastTotal] = useState<number | null>(cachedEvents.past?.total ?? null)
+  const [pastLoading, setPastLoading] = useState(cachedEvents.past === null)
 
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null)
   const [eventAspectById, setEventAspectById] = useState<Record<string, "square" | "portrait">>({})
@@ -190,12 +194,12 @@ export function Events() {
       .catch(() => setEventsEnabled(true))
   }, [])
 
-  // Fetch upcoming events whenever upcomingPage changes
+  // Fetch upcoming events — skip page 1 if already seeded from cache
   useEffect(() => {
+    if (upcomingPage === 1 && cachedEvents.upcoming !== null) return
     const load = async () => {
       setUpcomingLoading(true)
       try {
-        // Pass knownTotal on page 2+ to skip the countDocuments round-trip
         const totalParam = upcomingTotal !== null && upcomingPage > 1 ? `&knownTotal=${upcomingTotal}` : ""
         const res = await fetch(`/api/events?page=${upcomingPage}&limit=${UPCOMING_LIMIT}&type=upcoming${totalParam}`)
         const data = await res.json()
@@ -212,12 +216,12 @@ export function Events() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [upcomingPage])
 
-  // Fetch past events whenever pastPage changes
+  // Fetch past events — skip page 1 if already seeded from cache
   useEffect(() => {
+    if (pastPage === 1 && cachedEvents.past !== null) return
     const load = async () => {
       setPastLoading(true)
       try {
-        // Pass knownTotal on page 2+ to skip the countDocuments round-trip
         const totalParam = pastTotal !== null && pastPage > 1 ? `&knownTotal=${pastTotal}` : ""
         const res = await fetch(`/api/events?page=${pastPage}&limit=${PAST_LIMIT}&type=past${totalParam}`)
         const data = await res.json()
