@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
-import { Settings, Users, Calendar, BarChart3, Shield, ArrowLeft, Eye, EyeOff, Save } from "lucide-react"
+import { Settings, Users, Calendar, BarChart3, Shield, Eye, EyeOff, Save, MessageCircle, UserCircle2 } from "lucide-react"
 import Link from "next/link"
 import { ParticleBackground } from "@/components/particle-background"
 import { AdminNavbar } from "@/components/admin-navbar"
@@ -91,16 +91,28 @@ export default function AdminPage() {
   const [membersCount, setMembersCount] = useState<number | null>(null)
   const [eventsCount, setEventsCount] = useState<number | null>(null)
   const [quizzesCount, setQuizzesCount] = useState<number | null>(null)
+  const [usersCount, setUsersCount] = useState<number | null>(null)
+  const [communitiesCount, setCommunitiesCount] = useState<number | null>(null)
 
   useEffect(() => {
     if (!isAuthenticated) return
     async function fetchCounts() {
       try {
-        const [mRes, eRes, qRes] = await Promise.all([fetch("/api/members"), fetch("/api/events"), fetch("/api/quiz")])
-        const [mData, eData, qData] = await Promise.all([mRes.json(), eRes.json(), qRes.json()])
+        const [mRes, eRes, qRes, uRes, cRes] = await Promise.all([
+          fetch("/api/members"),
+          fetch("/api/events"),
+          fetch("/api/quiz"),
+          fetch("/api/admin/users"),
+          fetch("/api/communities"),
+        ])
+        const [mData, eData, qData, uData, cData] = await Promise.all([
+          mRes.json(), eRes.json(), qRes.json(), uRes.json(), cRes.json(),
+        ])
         setMembersCount(Array.isArray(mData) ? mData.length : (mData?.count ?? 0))
         setEventsCount(Array.isArray(eData) ? eData.length : (eData?.count ?? 0))
         setQuizzesCount(Array.isArray(qData) ? qData.length : (qData?.length ?? (qData?.count ?? 0)))
+        setUsersCount(Array.isArray(uData) ? uData.length : 0)
+        setCommunitiesCount(Array.isArray(cData) ? cData.length : 0)
       } catch (err) {
         console.error("Failed to fetch admin stats:", err)
       }
@@ -109,9 +121,11 @@ export default function AdminPage() {
   }, [isAuthenticated])
 
   const stats = [
-    { label: "Members", value: membersCount != null ? String(membersCount) : "—", icon: Users, color: "text-cyan-400" },
+    { label: "Club Members", value: membersCount != null ? String(membersCount) : "—", icon: Users, color: "text-cyan-400" },
     { label: "Events", value: eventsCount != null ? String(eventsCount) : "—", icon: Calendar, color: "text-emerald-400" },
     { label: "Quizzes", value: quizzesCount != null ? String(quizzesCount) : "—", icon: BarChart3, color: "text-sky-400" },
+    { label: "Registered Users", value: usersCount != null ? String(usersCount) : "—", icon: UserCircle2, color: "text-violet-400" },
+    { label: "Communities", value: communitiesCount != null ? String(communitiesCount) : "—", icon: MessageCircle, color: "text-green-400" },
   ]
 
   if (isAuthenticated === null) {
@@ -168,7 +182,7 @@ export default function AdminPage() {
       <div className="container mx-auto px-4 pt-28 pb-20">
         <div ref={dashboardRef} className="max-w-6xl mx-auto">
           {/* Stats Grid */}
-          <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
             {stats.map((stat) => (
               <div key={stat.label} className="glass-card rounded-xl px-4 py-3">
                 <div className="flex items-center gap-3">
@@ -216,9 +230,9 @@ export default function AdminPage() {
           </div>
 
           {/* Direct Links */}
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             <Card className="glass-card p-6">
-              <h3 className="mb-2 text-lg font-semibold text-foreground">Member Management</h3>
+              <h3 className="mb-2 text-lg font-semibold text-foreground">Club Members</h3>
               <p className="mb-4 text-sm text-muted-foreground">Add or remove club members and roles.</p>
               <Button asChild className="w-full bg-cyan-600 hover:bg-cyan-700">
                 <Link href="/admin/members"><Users className="mr-2 h-4 w-4" />Manage Members</Link>
@@ -236,6 +250,20 @@ export default function AdminPage() {
               <p className="mb-4 text-sm text-muted-foreground">Add questions and options to create quizzes.</p>
               <Button asChild className="w-full bg-sky-600 hover:bg-sky-700">
                 <Link href="/admin/quizzes"><BarChart3 className="mr-2 h-4 w-4" />Create Quiz</Link>
+              </Button>
+            </Card>
+            <Card className="glass-card p-6">
+              <h3 className="mb-2 text-lg font-semibold text-foreground">Communities</h3>
+              <p className="mb-4 text-sm text-muted-foreground">Add, edit, or remove WhatsApp community groups.</p>
+              <Button asChild className="w-full bg-green-600 hover:bg-green-700">
+                <Link href="/admin/communities"><MessageCircle className="mr-2 h-4 w-4" />Manage Communities</Link>
+              </Button>
+            </Card>
+            <Card className="glass-card p-6">
+              <h3 className="mb-2 text-lg font-semibold text-foreground">Registered Users</h3>
+              <p className="mb-4 text-sm text-muted-foreground">View all users who have signed up on the website.</p>
+              <Button asChild className="w-full bg-violet-600 hover:bg-violet-700">
+                <Link href="/admin/users"><UserCircle2 className="mr-2 h-4 w-4" />View Users</Link>
               </Button>
             </Card>
           </div>

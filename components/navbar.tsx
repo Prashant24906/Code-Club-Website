@@ -92,6 +92,7 @@ export function Navbar() {
   const navItems = [
     { name: "Members", href: "/members" },
     { name: "Events", href: "/events" },
+    { name: "Community", href: "/community" },
     { name: "Contact", href: "/contact" },
   ]
 
