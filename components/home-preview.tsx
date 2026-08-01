@@ -10,7 +10,7 @@ import {
   Code2, Cpu, Globe, Zap, Shield, BookOpen, Rocket, Layers,
   type LucideIcon,
 } from "lucide-react"
-import { useCachedMembers, useCachedEvents, useCachedCommunities } from "@/lib/data-cache"
+import { useCachedEvents, useCachedCommunities, useCachedMembersLeadership } from "@/lib/data-cache"
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -160,24 +160,16 @@ function EventsPreview() {
 // ─── Members Preview ──────────────────────────────────────────────────────────
 function MembersPreview() {
   const sectionRef = useRef<HTMLElement>(null)
-  const cachedMembers = useCachedMembers()
+  // Use the fast pre-fetched leadership slice (Core Leadership + isHead leads)
+  const cachedMembers = useCachedMembersLeadership()
 
-  // Filter: Core Leadership (executive team) + isHead leads from every other dept
-  const filteredMembers = (cachedMembers ?? []).filter(
-    (m) => m.department === "Core Leadership" || m.isHead
-  )
-
-  const [members, setMembers] = useState(filteredMembers)
+  const [members, setMembers] = useState(cachedMembers ?? [])
   const [loading, setLoading] = useState(!cachedMembers)
 
   // Read directly from the cache — DataCacheProvider fetches this on mount
   useEffect(() => {
     if (cachedMembers) {
-      setMembers(
-        cachedMembers.filter(
-          (m) => m.department === "Core Leadership" || m.isHead
-        )
-      )
+      setMembers(cachedMembers)
       setLoading(false)
     }
   }, [cachedMembers])
