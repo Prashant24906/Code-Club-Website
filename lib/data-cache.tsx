@@ -3,14 +3,19 @@
 /**
  * Global in-memory data cache for the Code Club site.
  *
- * On first mount this provider fires parallel fetches for:
- *   - membersLeadership  → Core Leadership + all isHead:true leads (fast, ~10 docs)
- *   - communities        → all communities
- *   - upcomingEvents     → page-1 upcoming events
- *   - pastEvents         → page-1 past events
+ * Fetch strategy (all fire simultaneously on mount):
  *
- * The full member list (membersAll) is fetched lazily the first time
- * useCachedMembers() is called with { full: true } — i.e. from the /members page.
+ *  Phase 1 — simultaneous:
+ *    ① GET /api/members?department=Core Leadership   (fast, ~5 docs)
+ *    ② GET /api/members?isHead=true                  (fast, ~10 docs)
+ *    ③ GET /api/members/departments                  (distinct names, ~1ms)
+ *    ④ GET /api/communities
+ *    ⑤ GET /api/events?type=upcoming
+ *    ⑥ GET /api/events?type=past
+ *
+ *  Phase 2 — fires right after ③ resolves (all parallel):
+ *    One GET /api/members?department=<name> per department
+ *    → stored in membersByDept: Record<string, Member[]>
  *
  * A 5-minute TTL ensures stale data is refreshed automatically.
  */
@@ -64,10 +69,14 @@ export type EventsPage = {
 type CacheEntry<T> = { data: T; fetchedAt: number } | null
 
 interface DataCache {
-  /** Core Leadership + all isHead leads — fetched eagerly on mount (fast) */
+  /** Core Leadership members + all isHead leads — available fast from Phase 1 */
   membersLeadership: CacheEntry<Member[]>
-  /** Full member list — fetched lazily on first /members page visit */
-  membersAll: CacheEntry<Member[]>
+  /**
+   * All members grouped by department name.
+   * Populated department-by-department as Phase 2 fetches complete.
+   * { "Core Leadership": [...], "Tech": [...], "Design": [...] }
+   */
+  membersByDept: CacheEntry<Record<string, Member[]>>
   communities: CacheEntry<Community[]>
   upcomingEvents: CacheEntry<EventsPage>
   pastEvents: CacheEntry<EventsPage>
@@ -76,7 +85,6 @@ interface DataCache {
 interface DataCacheContextValue {
   cache: DataCache
   setCache: React.Dispatch<React.SetStateAction<DataCache>>
-  /** Manually invalidate and re-fetch the whole cache (e.g. after admin writes) */
   invalidate: () => void
 }
 
@@ -86,13 +94,13 @@ const TTL_MS = 5 * 60 * 1_000 // 5 minutes
 
 const DataCacheContext = createContext<DataCacheContextValue | null>(null)
 
-function isFresh<T>(entry: CacheEntry<T>): entry is { data: T; fetchedAt: number } {
+export function isFresh<T>(entry: CacheEntry<T>): entry is { data: T; fetchedAt: number } {
   return entry !== null && Date.now() - entry.fetchedAt < TTL_MS
 }
 
 const EMPTY_CACHE: DataCache = {
   membersLeadership: null,
-  membersAll: null,
+  membersByDept: null,
   communities: null,
   upcomingEvents: null,
   pastEvents: null,
@@ -102,40 +110,36 @@ const EMPTY_CACHE: DataCache = {
 
 export function DataCacheProvider({ children }: { children: ReactNode }) {
   const [cache, setCache] = useState<DataCache>(EMPTY_CACHE)
-
-  // Prevent duplicate concurrent fetches
   const fetching = useRef(false)
 
   const prefetch = useCallback(async () => {
     if (fetching.current) return
     fetching.current = true
+
     try {
-      // Fire all 6 APIs simultaneously on mount — nothing is lazy anymore
-      const [coreRes, headsRes, allMembersRes, communitiesRes, upcomingRes, pastRes] = await Promise.allSettled([
-        fetch("/api/members?department=Core Leadership").then((r) => r.json()),
-        fetch("/api/members?isHead=true").then((r) => r.json()),
-        fetch("/api/members").then((r) => r.json()),
-        fetch("/api/communities").then((r) => r.json()),
-        fetch("/api/events?page=1&limit=8&type=upcoming").then((r) => r.json()),
-        fetch("/api/events?page=1&limit=8&type=past").then((r) => r.json()),
-      ])
+      // ── Phase 1: all fire simultaneously ──────────────────────────────────
+      const [coreRes, headsRes, deptsRes, communitiesRes, upcomingRes, pastRes] =
+        await Promise.allSettled([
+          fetch("/api/members?department=Core Leadership").then((r) => r.json()),
+          fetch("/api/members?isHead=true").then((r) => r.json()),
+          fetch("/api/members/departments").then((r) => r.json()),
+          fetch("/api/communities").then((r) => r.json()),
+          fetch("/api/events?page=1&limit=8&type=upcoming").then((r) => r.json()),
+          fetch("/api/events?page=1&limit=8&type=past").then((r) => r.json()),
+        ])
 
       const now = Date.now()
 
-      // Merge Core Leadership + all isHead leads, deduplicated by _id
+      // Build leadership slice (Core Leadership + all isHead leads, deduped)
       const coreList: Member[] = coreRes.status === "fulfilled" && Array.isArray(coreRes.value) ? coreRes.value : []
       const headsList: Member[] = headsRes.status === "fulfilled" && Array.isArray(headsRes.value) ? headsRes.value : []
       const leadershipIds = new Set(coreList.map((m) => String(m._id)))
       const merged = [...coreList, ...headsList.filter((m) => !leadershipIds.has(String(m._id)))]
 
+      // Write Phase 1 results immediately so components can render right away
       setCache((prev) => ({
         ...prev,
         membersLeadership: merged.length > 0 ? { data: merged, fetchedAt: now } : null,
-
-        membersAll:
-          allMembersRes.status === "fulfilled" && Array.isArray(allMembersRes.value)
-            ? { data: allMembersRes.value, fetchedAt: now }
-            : null,
 
         communities:
           communitiesRes.status === "fulfilled" && Array.isArray(communitiesRes.value)
@@ -152,15 +156,41 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
             ? { data: pastRes.value, fetchedAt: now }
             : null,
       }))
+
+      // ── Phase 2: one call per department, all in parallel ─────────────────
+      const departments: string[] =
+        deptsRes.status === "fulfilled" && Array.isArray(deptsRes.value)
+          ? deptsRes.value
+          : []
+
+      if (departments.length === 0) return
+
+      const deptResults = await Promise.allSettled(
+        departments.map((dept) =>
+          fetch(`/api/members?department=${encodeURIComponent(dept)}`).then((r) => r.json())
+        )
+      )
+
+      const byDept: Record<string, Member[]> = {}
+      departments.forEach((dept, i) => {
+        const result = deptResults[i]
+        if (result.status === "fulfilled" && Array.isArray(result.value)) {
+          byDept[dept] = result.value
+        }
+      })
+
+      if (Object.keys(byDept).length > 0) {
+        setCache((prev) => ({
+          ...prev,
+          membersByDept: { data: byDept, fetchedAt: Date.now() },
+        }))
+      }
     } finally {
       fetching.current = false
     }
   }, [])
 
-  // Fire prefetch once on mount
-  useEffect(() => {
-    prefetch()
-  }, [prefetch])
+  useEffect(() => { prefetch() }, [prefetch])
 
   const invalidate = useCallback(() => {
     setCache(EMPTY_CACHE)
@@ -184,8 +214,8 @@ export function useDataCache() {
 }
 
 /**
- * Home preview — returns Core Leadership + isHead leads (fast, always pre-fetched).
- * Returns null while the initial fetch is in flight.
+ * Home preview — Core Leadership + isHead leads.
+ * Available within ~100ms of mount (Phase 1).
  */
 export function useCachedMembersLeadership() {
   const { cache } = useDataCache()
@@ -193,31 +223,23 @@ export function useCachedMembersLeadership() {
 }
 
 /**
- * Full members page — returns all members.
- * Triggers a lazy fetch on first call if the full list isn't cached yet.
+ * Full members page — all members grouped by department.
+ * Available after Phase 2 completes (per-dept calls).
+ * Returns null while fetching; updates reactively as depts load.
+ */
+export function useCachedMembersByDept() {
+  const { cache } = useDataCache()
+  return isFresh(cache.membersByDept) ? cache.membersByDept.data : null
+}
+
+/**
+ * Flattened member list (for backward compat / any component needing a flat array).
+ * Derived from membersByDept — no extra fetch.
  */
 export function useCachedMembers() {
-  const { cache, setCache } = useDataCache()
-  const fetchingAll = useRef(false)
-
-  useEffect(() => {
-    if (isFresh(cache.membersAll) || fetchingAll.current) return
-    fetchingAll.current = true
-    fetch("/api/members")
-      .then((r) => r.json())
-      .then((data) => {
-        if (Array.isArray(data)) {
-          setCache((prev) => ({
-            ...prev,
-            membersAll: { data, fetchedAt: Date.now() },
-          }))
-        }
-      })
-      .catch(() => {})
-      .finally(() => { fetchingAll.current = false })
-  }, [cache.membersAll, setCache])
-
-  return isFresh(cache.membersAll) ? cache.membersAll.data : null
+  const { cache } = useDataCache()
+  if (!isFresh(cache.membersByDept)) return null
+  return Object.values(cache.membersByDept.data).flat()
 }
 
 /** Returns cached communities if fresh, or null if not yet ready */

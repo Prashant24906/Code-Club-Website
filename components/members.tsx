@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Users, UserX } from "lucide-react";
-import { useCachedMembers } from "@/lib/data-cache";
+import { useCachedMembersByDept } from "@/lib/data-cache";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -12,25 +12,22 @@ type Member = { _id: string; name: string; role: string; department: string; ima
 type Department = { name: string; lead: Member | null; coHead: Member | null; members: Member[]; color: string };
 
 export function Members() {
-  const cachedMembers = useCachedMembers();
+  // membersByDept is populated per-department by the cache's Phase 2 fetches
+  const membersByDept = useCachedMembersByDept();
+  // Flatten for backward compat with the rest of the component logic
+  const cachedMembers = membersByDept ? Object.values(membersByDept).flat() : null;
   const [members, setMembers] = useState<Member[]>(cachedMembers ?? []);
   const [loading, setLoading] = useState(cachedMembers === null);
   const [error, setError] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    // If cache already provided data, skip the fetch entirely
     if (cachedMembers !== null) {
       setMembers(cachedMembers);
       setLoading(false);
-      return;
     }
-    fetch("/api/members")
-      .then((res) => res.json())
-      .then((data) => { setMembers(data); setLoading(false); })
-      .catch(() => { setError(true); setLoading(false); });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cachedMembers]);
+  }, [membersByDept]);
 
   useEffect(() => {
     if (!members.length) return;
@@ -96,6 +93,15 @@ export function Members() {
 
   const isCoHead = (m: Member) => /co[\s-]?(head|lead)/i.test(m.role);
 
+  const deptColor = (name: string): string => {
+    const n = name.toLowerCase();
+    if (n.includes("tech"))    return "blue";
+    if (n.includes("market"))  return "purple";
+    if (n.includes("doc"))     return "emerald";
+    if (n.includes("event"))   return "indigo";
+    return "orange";
+  };
+
   const groupedDepartments: Record<string, { name: string; lead: Member | null; coHead: Member | null; members: Member[] }> = members
     .filter((m) => m.department !== "Core Leadership")
     .reduce((acc, member) => {
@@ -111,8 +117,25 @@ export function Members() {
       return acc;
     }, {} as Record<string, { name: string; lead: Member | null; coHead: Member | null; members: Member[] }>);
 
-  const departmentColors = ["blue", "emerald", "indigo", "purple", "orange"];
-  const departments: Department[] = Object.values(groupedDepartments).map((dept, i) => ({ ...dept, color: departmentColors[i % departmentColors.length] }));
+  // Maps each actual dept name to its fixed-order rank (case-insensitive substring match)
+  const deptRank = (name: string): number => {
+    const n = name.toLowerCase();
+    if (n.includes("tech"))          return 0;
+    if (n.includes("market"))        return 1;
+    if (n.includes("doc"))           return 2;
+    if (n.includes("event"))         return 3;
+    return 99; // unknown → end
+  };
+
+  const departments: Department[] = Object.values(groupedDepartments)
+    .sort((a, b) => {
+      const diff = deptRank(a.name) - deptRank(b.name);
+      return diff !== 0 ? diff : a.name.localeCompare(b.name);
+    })
+    .map((dept) => ({
+      ...dept,
+      color: deptColor(dept.name),
+    }));
 
   const getColorClasses = (color: string) => {
     const colors: Record<string, { stripe: string; badge: string; accent: string; border: string }> = {
