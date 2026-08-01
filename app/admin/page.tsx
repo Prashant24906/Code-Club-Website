@@ -18,6 +18,7 @@ export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
   const [quizEnabled, setQuizEnabled] = useState(false)
   const [eventsEnabled, setEventsEnabled] = useState(true)
+  const [registeredUsersDisplayCount, setRegisteredUsersDisplayCount] = useState(0)
   const [alertState, setAlertState] = useState({ open: false, title: "", description: "" })
 
   const loginRef = useRef<HTMLDivElement>(null)
@@ -30,6 +31,7 @@ export default function AdminPage() {
       .then((data) => {
         setQuizEnabled(data.quizEnabled ?? false)
         setEventsEnabled(data.eventsEnabled ?? true)
+        setRegisteredUsersDisplayCount(data.registeredUsersDisplayCount ?? 0)
       })
       .catch(console.error)
   }, [isAuthenticated])
@@ -76,7 +78,7 @@ export default function AdminPage() {
       const res = await fetch("/api/admin/settings", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ quizEnabled, eventsEnabled }),
+        body: JSON.stringify({ quizEnabled, eventsEnabled, registeredUsersDisplayCount }),
       })
       if (res.ok) {
         toast.success("Settings saved successfully!")
@@ -215,6 +217,20 @@ export default function AdminPage() {
                 <div className="flex items-center justify-between p-4 bg-background/20 rounded-lg">
                   <div><p className="text-foreground font-medium">Show Events</p><p className="text-sm text-muted-foreground">Display upcoming events</p></div>
                   <Switch checked={eventsEnabled} onCheckedChange={setEventsEnabled} />
+                </div>
+              </div>
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground">User Stats</h3>
+                <div className="p-4 bg-background/20 rounded-lg space-y-2">
+                  <p className="text-foreground font-medium">Registered Users (Fallback)</p>
+                  <p className="text-sm text-muted-foreground">Shown on Hero &amp; Communities until real count loads</p>
+                  <input
+                    type="number"
+                    min={0}
+                    value={registeredUsersDisplayCount}
+                    onChange={(e) => setRegisteredUsersDisplayCount(Number(e.target.value))}
+                    className="w-full glass rounded-lg px-4 py-2 text-foreground bg-background/50 border border-cyan-500/30 focus:outline-none focus:border-cyan-400"
+                  />
                 </div>
               </div>
             </div>

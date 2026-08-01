@@ -21,6 +21,7 @@ export async function GET() {
   return NextResponse.json({
     quizEnabled: settings.quizEnabled,
     eventsEnabled: settings.eventsEnabled,
+    registeredUsersDisplayCount: settings.registeredUsersDisplayCount ?? 0,
   })
 }
 
@@ -30,14 +31,15 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
   await connectDB()
-  const { quizEnabled, eventsEnabled } = await req.json()
+  const { quizEnabled, eventsEnabled, registeredUsersDisplayCount } = await req.json()
   const settings = await Settings.findOneAndUpdate(
     { key: "global" },
-    { $set: { quizEnabled, eventsEnabled } },
+    { $set: { quizEnabled, eventsEnabled, registeredUsersDisplayCount } },
     { upsert: true, new: true }
   )
   return NextResponse.json({
     quizEnabled: settings.quizEnabled,
     eventsEnabled: settings.eventsEnabled,
+    registeredUsersDisplayCount: settings.registeredUsersDisplayCount ?? 0,
   })
 }

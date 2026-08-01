@@ -6,6 +6,8 @@ const settingsSchema = new mongoose.Schema(
     key: { type: String, default: "global", unique: true },
     quizEnabled: { type: Boolean, default: false },
     eventsEnabled: { type: Boolean, default: true },
+    // Fallback display count shown before real user count loads
+    registeredUsersDisplayCount: { type: Number, default: 0 },
   },
   { timestamps: true }
 )

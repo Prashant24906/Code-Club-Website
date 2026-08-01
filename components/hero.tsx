@@ -122,6 +122,7 @@ export function Hero() {
   const [loading, setLoading] = useState(true)
   const { user } = useUser()
   const router = useRouter()
+  const [registeredUsersCount, setRegisteredUsersCount] = useState(0)
 
   const nextPanelRef = useRef<HTMLDivElement>(null)
 
@@ -138,6 +139,18 @@ export function Hero() {
   useEffect(() => {
     const t = setTimeout(() => setLoading(false), 1500)
     return () => clearTimeout(t)
+  }, [])
+
+  // Fetch the manually-set display count from settings
+  useEffect(() => {
+    fetch("/api/admin/settings")
+      .then((r) => r.json())
+      .then((data) => {
+        if (typeof data.registeredUsersDisplayCount === "number" && data.registeredUsersDisplayCount > 0) {
+          setRegisteredUsersCount(data.registeredUsersDisplayCount)
+        }
+      })
+      .catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -418,6 +431,18 @@ export function Hero() {
                     >
                       {user ? "Explore Events" : "Join Now"} <ArrowRight size={15} />
                     </button>
+                    {/* Registered users counter */}
+                    {registeredUsersCount > 0 && (
+                      <p
+                        className="mt-2.5 text-[11px] font-medium text-center sm:text-left"
+                        style={{ color: `${current.accent}aa` }}
+                      >
+                        <span className="font-black" style={{ color: current.accent }}>
+                          {registeredUsersCount}+
+                        </span>{" "}
+                        students already registered
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>

@@ -71,13 +71,25 @@ export function Community() {
   const [loading, setLoading] = useState(cachedCommunities === null)
   const [eventsCount, setEventsCount] = useState<number | null>(cachedEventsCount)
   const [clubMembersCount, setClubMembersCount] = useState<number | null>(cachedMembersCount)
+  const [registeredUsersCount, setRegisteredUsersCount] = useState(0)
+
+  // Fetch the manually-set display count from settings (one-shot)
+  useEffect(() => {
+    fetch("/api/admin/settings")
+      .then((r) => r.json())
+      .then((data) => {
+        if (typeof data.registeredUsersDisplayCount === "number" && data.registeredUsersDisplayCount > 0) {
+          setRegisteredUsersCount(data.registeredUsersDisplayCount)
+        }
+      })
+      .catch(() => {})
+  }, [])
 
   // Fetch only what the cache doesn't already have
   useEffect(() => {
     if (cachedCommunities !== null) {
       setCommunities(cachedCommunities)
       setLoading(false)
-      // Still update the derived counts if they weren't in cache
       if (cachedEventsCount !== null) setEventsCount(cachedEventsCount)
       if (cachedMembersCount !== null) setClubMembersCount(cachedMembersCount)
       return
