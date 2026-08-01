@@ -11,7 +11,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1.0,
     },
     {
-      url: `${BASE_URL}/community`,
+      url: `${BASE_URL}/communities`,
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 0.9,
