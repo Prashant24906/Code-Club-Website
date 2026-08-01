@@ -1,5 +1,5 @@
 import { Navbar } from "@/components/navbar";
-import { Community } from "@/components/community";
+import { Community } from "@/components/communities";
 import { ParticleBackground } from "@/components/particle-background";
 import { PageHero } from "@/components/page-hero";
 
