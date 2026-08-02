@@ -65,7 +65,7 @@ export function Community() {
     cache.upcomingEvents?.data?.total != null && cache.pastEvents?.data?.total != null
       ? cache.upcomingEvents.data.total + cache.pastEvents.data.total
       : cache.upcomingEvents?.data?.total ?? null
-  const cachedMembersCount = cache.members?.data?.length ?? null
+  const cachedMembersCount = cache.membersByDept?.data != null ? Object.values(cache.membersByDept.data).flat().length : null
 
   const [communities, setCommunities] = useState<Community[]>(cachedCommunities ?? [])
   const [loading, setLoading] = useState(cachedCommunities === null)

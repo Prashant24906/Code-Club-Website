@@ -7,7 +7,7 @@ import Image from "next/image"
 import Link from "next/link"
 import {
   Calendar, MapPin, Clock, Users, ArrowRight, MessageCircle,
-  Code2, Cpu, Globe, Zap, Shield, BookOpen, Rocket, Layers,
+  Code2, Cpu, Globe, Zap, Shield, BookOpen, Rocket, Layers, Trophy,
   type LucideIcon,
 } from "lucide-react"
 import { useCachedEvents, useCachedCommunities, useCachedMembersLeadership } from "@/lib/data-cache"
@@ -66,29 +66,13 @@ function EventsPreview() {
     <section ref={sectionRef} id="home-events" className="py-20 px-4">
       <div className="max-w-6xl mx-auto">
         {/* Heading */}
-        <div className="ep-heading flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-12">
-          <div>
-            <div
-              className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-widest mb-4 border"
-              style={{ color: "#38bdf8", borderColor: "#38bdf840", background: "#38bdf812" }}
-            >
-              <Calendar size={12} />
-              Upcoming
-            </div>
-            <h2 className="text-4xl md:text-5xl font-bold">
-              Our <span className="gradient-text">Events</span>
-            </h2>
-            <p className="mt-3 text-muted-foreground max-w-xl">
-              Workshops, hackathons, and tech talks — stay ahead of the curve.
-            </p>
-          </div>
-          <Link
-            href="/events"
-            className="group inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold border transition-all duration-300 hover:scale-105 shrink-0"
-            style={{ color: "#38bdf8", borderColor: "#38bdf840", background: "#38bdf810" }}
-          >
-            See All Events <ArrowRight size={15} className="group-hover:translate-x-1 transition-transform" />
-          </Link>
+        <div className="ep-heading text-center mb-12">
+          <h2 className="text-4xl md:text-5xl font-bold">
+            Our <span className="gradient-text">Events</span>
+          </h2>
+          <p className="mt-3 text-muted-foreground max-w-xl mx-auto">
+            Workshops, hackathons, and tech talks — stay ahead of the curve.
+          </p>
         </div>
 
         {/* Cards */}
@@ -99,8 +83,61 @@ function EventsPreview() {
             ))}
           </div>
         ) : events.length === 0 ? (
-          <div className="glass-card rounded-2xl p-10 text-center text-muted-foreground">
-            No upcoming events right now — check back soon!
+          <div className="glass-card rounded-3xl p-8 md:p-10 relative overflow-hidden">
+            {/* Top accent line */}
+            <div
+              className="absolute inset-x-0 top-0 h-px"
+              style={{ background: "linear-gradient(90deg, transparent, #38bdf860, transparent)" }}
+            />
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{ background: "radial-gradient(ellipse at 20% 50%, #38bdf808 0%, transparent 60%)" }}
+            />
+
+            <div className="relative flex flex-col sm:flex-row items-center gap-6 sm:gap-10">
+              {/* Icon */}
+              <div
+                className="shrink-0 flex items-center justify-center w-16 h-16 rounded-2xl"
+                style={{
+                  background: "linear-gradient(135deg, #38bdf825, #6366f120)",
+                  border: "1px solid #38bdf835",
+                  boxShadow: "0 8px 32px #38bdf815",
+                }}
+              >
+                <Trophy size={30} className="text-sky-400" />
+              </div>
+
+              {/* Text */}
+              <div className="flex-1 text-center sm:text-left">
+                <div
+                  className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-widest mb-2 border"
+                  style={{ color: "#38bdf8", borderColor: "#38bdf840", background: "#38bdf812" }}
+                >
+                  <Calendar size={10} />
+                  {cachedEvents.past?.total
+                    ? `${cachedEvents.past.total}+ Events Hosted Last Tenure`
+                    : "Events Hosted Last Tenure"}
+                </div>
+                <p className="text-muted-foreground text-sm leading-relaxed max-w-lg">
+                  Our previous tenure was packed with workshops, hackathons &amp; tech talks.
+                  Explore everything we&apos;ve hosted.
+                </p>
+              </div>
+
+              {/* CTA */}
+              <Link
+                href="/events"
+                className="group shrink-0 inline-flex items-center gap-2.5 px-7 py-3 rounded-xl text-sm font-bold transition-all duration-300 hover:scale-105"
+                style={{
+                  background: "linear-gradient(135deg, #38bdf8, #6366f1)",
+                  color: "#fff",
+                  boxShadow: "0 4px 20px #38bdf828",
+                }}
+              >
+                Explore All Events
+                <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -193,29 +230,29 @@ function MembersPreview() {
     <section ref={sectionRef} id="home-members" className="py-20 px-4">
       <div className="max-w-6xl mx-auto">
         {/* Heading */}
-        <div className="mp-heading flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-12">
-          <div>
-            <div
-              className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-widest mb-4 border"
-              style={{ color: "#a78bfa", borderColor: "#a78bfa40", background: "#a78bfa12" }}
-            >
-              <Users size={12} />
-              The Team
-            </div>
-            <h2 className="text-4xl md:text-5xl font-bold">
-              Meet the <span className="gradient-text">Members</span>
-            </h2>
-            <p className="mt-3 text-muted-foreground max-w-xl">
-              Talented developers, designers, and innovators driving CoDE Club forward.
-            </p>
-          </div>
-          <Link
-            href="/members"
-            className="group inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold border transition-all duration-300 hover:scale-105 shrink-0"
-            style={{ color: "#a78bfa", borderColor: "#a78bfa40", background: "#a78bfa10" }}
+        <div className="mp-heading text-center mb-12">
+          <div
+            className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-widest mb-4 border"
+            style={{ color: "#a78bfa", borderColor: "#a78bfa40", background: "#a78bfa12" }}
           >
-            See All Members <ArrowRight size={15} className="group-hover:translate-x-1 transition-transform" />
-          </Link>
+            <Users size={12} />
+            The Team
+          </div>
+          <h2 className="text-4xl md:text-5xl font-bold">
+            Meet the <span className="gradient-text">Members</span>
+          </h2>
+          <p className="mt-3 text-muted-foreground max-w-xl mx-auto">
+            Talented developers, designers, and innovators driving CoDE Club forward.
+          </p>
+          <div className="mt-6">
+            <Link
+              href="/members"
+              className="group inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold border transition-all duration-300 hover:scale-105"
+              style={{ color: "#a78bfa", borderColor: "#a78bfa40", background: "#a78bfa10" }}
+            >
+              See All Members <ArrowRight size={15} className="group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </div>
         </div>
 
         {/* Cards */}
@@ -304,29 +341,29 @@ function CommunitiesPreview() {
     <section ref={sectionRef} id="home-communities" className="py-20 px-4">
       <div className="max-w-6xl mx-auto">
         {/* Heading */}
-        <div className="cp-heading flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-12">
-          <div>
-            <div
-              className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-widest mb-4 border"
-              style={{ color: "#34d399", borderColor: "#34d39940", background: "#34d39912" }}
-            >
-              <WhatsAppIcon size={12} />
-              WhatsApp Groups
-            </div>
-            <h2 className="text-4xl md:text-5xl font-bold">
-              Our <span className="gradient-text">Communities</span>
-            </h2>
-            <p className="mt-3 text-muted-foreground max-w-xl">
-              Pick your niche and join the conversation with like-minded developers.
-            </p>
-          </div>
-          <Link
-            href="/communities"
-            className="group inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold border transition-all duration-300 hover:scale-105 shrink-0"
-            style={{ color: "#34d399", borderColor: "#34d39940", background: "#34d39910" }}
+        <div className="cp-heading text-center mb-12">
+          <div
+            className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-widest mb-4 border"
+            style={{ color: "#34d399", borderColor: "#34d39940", background: "#34d39912" }}
           >
-            Explore All <ArrowRight size={15} className="group-hover:translate-x-1 transition-transform" />
-          </Link>
+            <WhatsAppIcon size={12} />
+            WhatsApp Groups
+          </div>
+          <h2 className="text-4xl md:text-5xl font-bold">
+            Our <span className="gradient-text">Communities</span>
+          </h2>
+          <p className="mt-3 text-muted-foreground max-w-xl mx-auto">
+            Pick your niche and join the conversation with like-minded developers.
+          </p>
+          <div className="mt-6">
+            <Link
+              href="/communities"
+              className="group inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold border transition-all duration-300 hover:scale-105"
+              style={{ color: "#34d399", borderColor: "#34d39940", background: "#34d39910" }}
+            >
+              Explore All <ArrowRight size={15} className="group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </div>
         </div>
 
         {/* Cards */}

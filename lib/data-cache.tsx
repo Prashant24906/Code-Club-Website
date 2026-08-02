@@ -6,16 +6,17 @@
  * Fetch strategy (all fire simultaneously on mount):
  *
  *  Phase 1 — simultaneous:
- *    ① GET /api/members?department=Core Leadership   (fast, ~5 docs)
- *    ② GET /api/members?isHead=true                  (fast, ~10 docs)
- *    ③ GET /api/members/departments                  (distinct names, ~1ms)
- *    ④ GET /api/communities
- *    ⑤ GET /api/events?type=upcoming
- *    ⑥ GET /api/events?type=past
+ *    ① GET /api/members?department=Core Leadership   (fast, ~5 docs — instant leadership render)
+ *    ② GET /api/members?isHead=true                  (fast, ~10 docs — instant leadership render)
+ *    ③ GET /api/communities
+ *    ④ GET /api/events?type=upcoming
+ *    ⑤ GET /api/events?type=past
  *
- *  Phase 2 — fires right after ③ resolves (all parallel):
- *    One GET /api/members?department=<name> per department
- *    → stored in membersByDept: Record<string, Member[]>
+ *  Phase 2 — single call (fires after Phase 1 resolves):
+ *    GET /api/members  → all members in one DB query, grouped client-side into membersByDept
+ *
+ *  Previously Phase 2 called /api/members/departments then fired N per-dept fetches
+ *  (N+1 HTTP requests, 2 serial round-trips). One call saves N–1 requests and 1 RTT.
  *
  * A 5-minute TTL ensures stale data is refreshed automatically.
  */
@@ -118,11 +119,10 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
 
     try {
       // ── Phase 1: all fire simultaneously ──────────────────────────────────
-      const [coreRes, headsRes, deptsRes, communitiesRes, upcomingRes, pastRes] =
+      const [coreRes, headsRes, communitiesRes, upcomingRes, pastRes] =
         await Promise.allSettled([
           fetch("/api/members?department=Core Leadership").then((r) => r.json()),
           fetch("/api/members?isHead=true").then((r) => r.json()),
-          fetch("/api/members/departments").then((r) => r.json()),
           fetch("/api/communities").then((r) => r.json()),
           fetch("/api/events?page=1&limit=8&type=upcoming").then((r) => r.json()),
           fetch("/api/events?page=1&limit=8&type=past").then((r) => r.json()),
@@ -157,27 +157,22 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
             : null,
       }))
 
-      // ── Phase 2: one call per department, all in parallel ─────────────────
-      const departments: string[] =
-        deptsRes.status === "fulfilled" && Array.isArray(deptsRes.value)
-          ? deptsRes.value
-          : []
+      // ── Phase 2: single call — all members at once, grouped client-side ───
+      let allMembersJson: unknown
+      try {
+        allMembersJson = await fetch("/api/members").then((r) => r.json())
+      } catch {
+        return
+      }
 
-      if (departments.length === 0) return
-
-      const deptResults = await Promise.allSettled(
-        departments.map((dept) =>
-          fetch(`/api/members?department=${encodeURIComponent(dept)}`).then((r) => r.json())
-        )
-      )
+      if (!Array.isArray(allMembersJson)) return
 
       const byDept: Record<string, Member[]> = {}
-      departments.forEach((dept, i) => {
-        const result = deptResults[i]
-        if (result.status === "fulfilled" && Array.isArray(result.value)) {
-          byDept[dept] = result.value
-        }
-      })
+      for (const member of allMembersJson as Member[]) {
+        const dept = member.department || "Uncategorized"
+        if (!byDept[dept]) byDept[dept] = []
+        byDept[dept].push(member)
+      }
 
       if (Object.keys(byDept).length > 0) {
         setCache((prev) => ({
