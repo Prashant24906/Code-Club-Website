@@ -11,6 +11,8 @@ import {
   type LucideIcon,
 } from "lucide-react"
 import { useCachedEvents, useCachedCommunities, useCachedMembersLeadership } from "@/lib/data-cache"
+import SpotlightCard from './ui/spotlight-card';
+import BorderGlow from './ui/Border-glow';
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -266,11 +268,10 @@ function MembersPreview() {
           <div className="glass-card rounded-2xl p-10 text-center text-muted-foreground">No members found.</div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          {members.map((m) => (
-              <div
-                key={m._id}
-                className="mp-card glass-card rounded-2xl p-4 flex flex-col items-center text-center group hover:-translate-y-2 transition-transform duration-300"
-              >
+            {members.map((m) => (
+              <SpotlightCard key={m._id} className="custom-spotlight-card mp-card glass-card rounded-2xl p-4 flex flex-col items-center text-center group hover:-translate-y-2 transition-transform duration-300" spotlightColor="rgba(0, 229, 255, 0.2)">
+
+
                 <div className="relative w-16 h-16 rounded-full overflow-hidden mb-3 border-2 group-hover:scale-110 transition-transform duration-300"
                   style={{ borderColor: m.isHead ? "#38bdf8" : "#a78bfa40" }}
                 >
@@ -288,7 +289,7 @@ function MembersPreview() {
                 <p className="text-sm font-bold text-foreground leading-snug">{m.name}</p>
                 <p className="text-[11px] text-muted-foreground mt-0.5">{m.role}</p>
                 <p className="text-[10px] text-muted-foreground opacity-70">{m.department}</p>
-              </div>
+              </SpotlightCard>
             ))}
           </div>
         )}
@@ -374,33 +375,46 @@ function CommunitiesPreview() {
         ) : communities.length === 0 ? (
           <div className="glass-card rounded-2xl p-10 text-center text-muted-foreground">No communities yet.</div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-5">
             {communities.slice(0, 6).map((c) => {
               const Icon = getIcon(c.iconName)
               return (
-                <a
+                <BorderGlow
                   key={c._id}
-                  href={c.whatsappLink || "#"}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="cp-card glass-card rounded-2xl p-5 flex items-start gap-4 group hover:-translate-y-1.5 transition-transform duration-300 cursor-pointer"
-                  style={{ border: `1px solid ${c.color}25` }}
+                  edgeSensitivity={30}
+                  glowColor="40 80 80"
+                  backgroundColor="#120F17"
+                  borderRadius={28}
+                  glowRadius={50}
+                  glowIntensity={1}
+                  coneSpread={25}
+                  animated={false}
+                  colors={['#c084fc', '#f472b6', '#38bdf8']}
                 >
-                  <div
-                    className="size-11 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300"
-                    style={{ background: `linear-gradient(135deg,${c.color}30,${c.color}10)`, border: `1px solid ${c.color}30` }}
+                  <a
+                    
+                    href={c.whatsappLink || "#"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="cp-card glass-card rounded-2xl p-5 flex items-start gap-4 group hover:-translate-y-1.5 transition-transform duration-300 cursor-pointer"
+                    style={{ border: `1px solid ${c.color}25` }}
                   >
-                    <Icon size={20} style={{ color: c.color }} />
-                  </div>
-                  <div className="min-w-0">
-                    <h3 className="font-bold text-foreground text-sm mb-0.5 truncate">{c.name}</h3>
-                    <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{c.description}</p>
-                    <div className="flex items-center gap-1 mt-2 text-[11px] font-semibold" style={{ color: "#25D366" }}>
-                      <WhatsAppIcon size={11} />
-                      {c.members} members
+                    <div
+                      className="size-11 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300"
+                      style={{ background: `linear-gradient(135deg,${c.color}30,${c.color}10)`, border: `1px solid ${c.color}30` }}
+                    >
+                      <Icon size={20} style={{ color: c.color }} />
                     </div>
-                  </div>
-                </a>
+                    <div className="min-w-0">
+                      <h3 className="font-bold text-foreground text-sm mb-0.5 truncate">{c.name}</h3>
+                      <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{c.description}</p>
+                      <div className="flex items-center gap-1 mt-2 text-[11px] font-semibold" style={{ color: "#25D366" }}>
+                        <WhatsAppIcon size={11} />
+                        {c.members} members
+                      </div>
+                    </div>
+                  </a>
+                </BorderGlow>
               )
             })}
           </div>
