@@ -265,7 +265,7 @@ function MembersPreview() {
         ) : members.length === 0 ? (
           <div className="glass-card rounded-2xl p-10 text-center text-muted-foreground">No members found.</div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-4">
           {members.map((m) => (
               <div
                 key={m._id}
