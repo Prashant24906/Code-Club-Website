@@ -33,3 +33,31 @@ export async function GET(
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const authResponse = await checkAuth();
+  if (authResponse) return authResponse;
+
+  await connectDB();
+  // `id` here is eventId, but we need regId from searchParams
+  const searchParams = req.nextUrl.searchParams;
+  const regId = searchParams.get("regId");
+
+  if (!regId) {
+    return NextResponse.json({ error: "Missing regId" }, { status: 400 });
+  }
+
+  try {
+    const deleted = await Registration.findByIdAndDelete(regId);
+    if (!deleted) {
+      return NextResponse.json({ error: "Registration not found" }, { status: 404 });
+    }
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Failed to delete registration:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  }
+}

@@ -1,12 +1,12 @@
 "use client"
 
-import { useEffect, useState, use } from "react"
+import { useEffect, useState, use, useCallback } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { AdminNavbar } from "@/components/admin-navbar"
 import { ParticleBackground } from "@/components/particle-background"
-import { Loader2, Download, ChevronLeft } from "lucide-react"
+import { Loader2, Download, ChevronLeft, Trash2 } from "lucide-react"
 
 type Teammate = { name: string; email: string; phone: string }
 
@@ -33,7 +33,7 @@ export default function RegistrationsPage({ params }: Props) {
   const [registrations, setRegistrations] = useState<Registration[]>([])
   const [eventTitle, setEventTitle] = useState("")
 
-  useEffect(() => {
+  const fetchRegistrations = useCallback(() => {
     fetch(`/api/admin/events/${id}/registrations`)
       .then(res => res.json())
       .then(data => {
@@ -45,6 +45,22 @@ export default function RegistrationsPage({ params }: Props) {
       .catch(console.error)
       .finally(() => setLoading(false))
   }, [id])
+
+  useEffect(() => {
+    fetchRegistrations()
+  }, [fetchRegistrations])
+
+  const deleteRegistration = async (regId: string) => {
+    if (!confirm("Are you sure you want to delete this registration?")) return
+    try {
+      const res = await fetch(`/api/admin/events/${id}/registrations?regId=${regId}`, { method: "DELETE" })
+      if (res.ok) fetchRegistrations()
+      else alert("Failed to delete registration")
+    } catch (err) {
+      console.error(err)
+      alert("Error deleting registration")
+    }
+  }
 
   const downloadCSV = () => {
     // Flatten registrations (1 row per person, including teammates)
@@ -126,7 +142,8 @@ export default function RegistrationsPage({ params }: Props) {
                     <th className="px-4 py-3 font-semibold tracking-wider">Email</th>
                     <th className="px-4 py-3 font-semibold tracking-wider">Phone</th>
                     <th className="px-4 py-3 font-semibold tracking-wider">Academic Info</th>
-                    <th className="px-4 py-3 font-semibold tracking-wider">Team</th>
+                    <th className="px-4 py-3 font-semibold tracking-wider">Team Details</th>
+                    <th className="px-4 py-3 font-semibold tracking-wider text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/10">
@@ -150,13 +167,33 @@ export default function RegistrationsPage({ params }: Props) {
                       </td>
                       <td className="px-4 py-3">
                         {reg.teamName ? (
-                          <div className="flex flex-col">
-                            <span className="font-semibold text-primary">{reg.teamName}</span>
-                            <span className="text-xs text-muted-foreground mt-0.5">
-                              + {reg.teammates?.length || 0} member(s)
-                            </span>
+                          <div className="flex flex-col space-y-2">
+                            <div className="font-semibold text-primary">{reg.teamName}</div>
+                            {reg.teammates && reg.teammates.length > 0 ? (
+                              <div className="text-xs text-muted-foreground flex flex-col gap-1 border-l-2 border-white/10 pl-2">
+                                {reg.teammates.map((tm, i) => (
+                                  <div key={i} className="flex flex-col">
+                                    <span className="text-white/80">{tm.name}</span>
+                                    <span className="text-[10px] opacity-70">{tm.email}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">No teammates listed</span>
+                            )}
                           </div>
                         ) : "—"}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => deleteRegistration(reg._id)}
+                          className="h-8 w-8 text-muted-foreground hover:text-red-400 hover:bg-red-400/10 transition-colors"
+                          title="Delete Registration"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </td>
                     </tr>
                   ))}
