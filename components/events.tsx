@@ -1,10 +1,11 @@
 "use client"
 
 import { useRef, useState, useEffect, useCallback } from "react"
+import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { gsap } from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 import { Calendar, MapPin, Clock, ChevronLeft, ChevronRight } from "lucide-react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Markdown } from "@/components/ui/markdown"
 import { useUser } from "@/hooks/use-user"
 import { AuthModal } from "@/components/auth-modal"
@@ -183,6 +184,7 @@ export function Events() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null)
   const [eventAspectById, setEventAspectById] = useState<Record<string, "square" | "portrait">>({})
   const sectionRef = useRef<HTMLElement>(null)
+  const router = useRouter()
   const { user } = useUser()
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [pendingFormLink, setPendingFormLink] = useState<string | null>(null)
@@ -311,6 +313,7 @@ export function Events() {
     )
   }
 
+
   return (
     <section id="events" ref={sectionRef} className="py-20 px-4">
       <div className="max-w-6xl mx-auto">
@@ -340,7 +343,7 @@ export function Events() {
                 {upcomingEvents.map((event) => {
                   const imgs = getImages(event)
                   return (
-                    <div key={event._id} className="event-card glass-card rounded-2xl p-3 sm:p-4 group cursor-pointer w-full max-w-[320px] border border-white/10 hover:-translate-y-1 transition-transform duration-300" onClick={() => setSelectedEvent(event)}>
+                    <Link key={event._id} href={`/events/${event._id}`} className="event-card block glass-card rounded-2xl p-3 sm:p-4 group cursor-pointer w-full max-w-[320px] border border-white/10 hover:-translate-y-1 transition-transform duration-300">
                       <div className={`relative bg-black/20 rounded-xl overflow-hidden border border-white/10 mb-4 ${eventAspectById[event._id] === "square" ? "aspect-square" : "aspect-[3/4]"}`}>
                         <ImageCarousel images={imgs} alt={event.title} className="absolute inset-0" />
                         <div className="absolute top-3 right-3 bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-medium z-20">Upcoming</div>
@@ -352,15 +355,10 @@ export function Events() {
                         {event.time && <div className="flex items-center space-x-2"><Clock className="h-4 w-4" style={{ color: "var(--accent-blue)" }} /><span>{event.time}</span></div>}
                         {event.location && <div className="flex items-center space-x-2"><MapPin className="h-4 w-4" style={{ color: "var(--accent-blue)" }} /><span className="truncate">{event.location}</span></div>}
                       </div>
-                      {event.googleFormLink && (
-                        <button
-                          onClick={(e) => handleRegister(e, event.googleFormLink!)}
-                          className="inline-flex w-full justify-center bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium transition-transform hover:scale-[1.02]"
-                        >
-                          Register
-                        </button>
-                      )}
-                    </div>
+                      <div className="inline-flex w-full justify-center bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium transition-transform hover:scale-[1.02]">
+                        Register Now
+                      </div>
+                    </Link>
                   )
                 })}
               </div>
@@ -414,7 +412,7 @@ export function Events() {
                 {pastEvents.map((event) => {
                   const imgs = getImages(event)
                   return (
-                    <div key={event._id} className="event-card glass-card rounded-2xl p-3 sm:p-4 group cursor-pointer opacity-80 hover:opacity-100 w-full max-w-[300px] border border-white/10 hover:-translate-y-1 transition-all duration-300" onClick={() => setSelectedEvent(event)}>
+                    <div key={event._id} className="event-card glass-card rounded-2xl p-3 sm:p-4 group cursor-pointer opacity-80 hover:opacity-100 w-full max-w-[300px] border border-white/10 hover:-translate-y-1 transition-all duration-300" onClick={() => router.push(`/events/${event._id}`)}>
                       <div className={`relative bg-black/20 rounded-xl overflow-hidden border border-white/10 mb-4 ${eventAspectById[event._id] === "square" ? "aspect-square" : "aspect-[3/4]"}`}>
                         <ImageCarousel images={imgs} alt={event.title} className="absolute inset-0" />
                         <div className="absolute top-2 right-2 bg-muted text-muted-foreground px-2 py-1 rounded-full text-xs z-20">Completed</div>
@@ -456,61 +454,6 @@ export function Events() {
           )}
         </div>
       </div>
-
-      {/* Event Detail Dialog */}
-      <Dialog open={!!selectedEvent} onOpenChange={(open) => !open && setSelectedEvent(null)}>
-        <DialogContent className="w-[calc(100%-1rem)] sm:max-w-4xl p-4 md:p-6 bg-background border border-border shadow-2xl max-h-[88vh] overflow-y-auto">
-          {selectedEvent && (() => {
-            const imgs = getImages(selectedEvent)
-            return (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-[44%_56%] gap-5 md:gap-6 items-start">
-                  {/* Carousel in dialog */}
-                  <div className={`rounded-xl border border-white/10 bg-black/20 overflow-hidden relative ${eventAspectById[selectedEvent._id] === "square" ? "aspect-square" : "aspect-[3/4]"} max-h-[42vh]`}>
-                    <ImageCarousel images={imgs} alt={selectedEvent.title} className="absolute inset-0" large />
-                  </div>
-                  <div className="space-y-4">
-                    <DialogHeader>
-                      <DialogTitle className="text-xl md:text-2xl leading-tight pr-8">{selectedEvent.title}</DialogTitle>
-                    </DialogHeader>
-                    <Markdown content={selectedEvent.description || "No description provided."} className="text-sm leading-relaxed text-muted-foreground" />
-                    <div className="rounded-xl border border-white/10 bg-white/5 p-3 space-y-2 text-sm">
-                      <div className="flex items-center gap-2 text-muted-foreground"><Calendar className="h-4 w-4" style={{ color: "var(--accent-blue)" }} /><span>{new Date(selectedEvent.date).toLocaleDateString("en-US")}</span></div>
-                      {selectedEvent.time && <div className="flex items-center gap-2 text-muted-foreground"><Clock className="h-4 w-4" style={{ color: "var(--accent-blue)" }} /><span>{selectedEvent.time}</span></div>}
-                      {selectedEvent.location && <div className="flex items-center gap-2 text-muted-foreground"><MapPin className="h-4 w-4" style={{ color: "var(--accent-blue)" }} /><span>{selectedEvent.location}</span></div>}
-                    </div>
-                    {imgs.length > 1 && (
-                      <p className="text-xs text-muted-foreground">{imgs.length} photos · swipe or use arrows to browse</p>
-                    )}
-                    {selectedEvent.googleFormLink && isUpcomingEvent(selectedEvent) && (
-                      <button
-                        onClick={(e) => handleRegister(e, selectedEvent.googleFormLink!)}
-                        className="inline-flex w-full md:w-auto justify-center bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium transition-transform hover:scale-[1.02]"
-                      >
-                        Register
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* Thumbnail strip (if more than 1 image) */}
-                {imgs.length > 1 && (
-                  <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
-                    {imgs.map((src, i) => (
-                      <img
-                        key={i}
-                        src={src}
-                        alt={`${selectedEvent.title} photo ${i + 1}`}
-                        className="h-16 w-16 rounded-lg object-cover border border-white/10 flex-shrink-0 cursor-pointer hover:border-primary/60 transition-colors"
-                      />
-                    ))}
-                  </div>
-                )}
-              </>
-            )
-          })()}
-        </DialogContent>
-      </Dialog>
 
       {/* Auth Modal */}
       <AuthModal

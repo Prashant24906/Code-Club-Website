@@ -35,6 +35,9 @@ export default function EventsAdminPage() {
   const [aGoogleForm, setAGoogleForm] = useState("")
   const [aImages, setAImages] = useState<string[]>([])
   const [aImageRatio, setAImageRatio] = useState<EventImageRatio>("portrait")
+  const [aMinTeam, setAMinTeam] = useState("")
+  const [aMaxTeam, setAMaxTeam] = useState("")
+  const [aTeamLabel, setATeamLabel] = useState("")
 
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editOpen, setEditOpen] = useState(false)
@@ -45,6 +48,9 @@ export default function EventsAdminPage() {
   const [eGoogleForm, setEGoogleForm] = useState("")
   const [eImages, setEImages] = useState<string[]>([])
   const [eImageRatio, setEImageRatio] = useState<EventImageRatio>("portrait")
+  const [eMinTeam, setEMinTeam] = useState("")
+  const [eMaxTeam, setEMaxTeam] = useState("")
+  const [eTeamLabel, setETeamLabel] = useState("")
 
   const [addCropOpen, setAddCropOpen] = useState(false)
   const [addCropSrc, setAddCropSrc] = useState<string | null>(null)
@@ -90,6 +96,9 @@ export default function EventsAdminPage() {
       images: aImages,
       googleFormLink: aGoogleForm.trim() || undefined,
       image: aImages[0] || "", // legacy compat
+      minTeamSize: aMinTeam ? Number(aMinTeam) : undefined,
+      maxTeamSize: aMaxTeam ? Number(aMaxTeam) : undefined,
+      teamNameLabel: aTeamLabel.trim() || undefined,
     }
 
     try {
@@ -117,6 +126,9 @@ export default function EventsAdminPage() {
       images: eImages,
       googleFormLink: eGoogleForm.trim() || undefined,
       image: eImages[0] || "", // legacy compat
+      minTeamSize: eMinTeam ? Number(eMinTeam) : undefined,
+      maxTeamSize: eMaxTeam ? Number(eMaxTeam) : undefined,
+      teamNameLabel: eTeamLabel.trim() || undefined,
     }
 
     try {
@@ -167,6 +179,9 @@ export default function EventsAdminPage() {
     setAGoogleForm("")
     setAImages([])
     setAImageRatio("portrait")
+    setAMinTeam("")
+    setAMaxTeam("")
+    setATeamLabel("")
   }
   function resetEditForm() {
     setEditingId(null)
@@ -177,6 +192,9 @@ export default function EventsAdminPage() {
     setEGoogleForm("")
     setEImages([])
     setEImageRatio("portrait")
+    setEMinTeam("")
+    setEMaxTeam("")
+    setETeamLabel("")
   }
 
   const onAddDrop = (files: File[]) => {
@@ -269,6 +287,9 @@ export default function EventsAdminPage() {
     setELocation(event.location || "")
     setEDescription(event.description)
     setEGoogleForm(event.googleFormLink || "")
+    setEMinTeam(event.minTeamSize != null ? String(event.minTeamSize) : "")
+    setEMaxTeam(event.maxTeamSize != null ? String(event.maxTeamSize) : "")
+    setETeamLabel(event.teamNameLabel || "")
     
     // Support legacy data structure
     if (event.images && event.images.length > 0) {
@@ -335,9 +356,12 @@ export default function EventsAdminPage() {
                       <span>{new Date(e.date).toLocaleDateString()}</span>
                       <span>{e.location || "TBD"}</span>
                     </div>
-                    <div className="mt-4 flex gap-2">
+                    <div className="mt-4 flex flex-wrap gap-2">
                       <Button size="sm" variant="secondary" onClick={() => openEdit(e)}>
                         Edit
+                      </Button>
+                      <Button size="sm" variant="outline" asChild>
+                        <Link href={`/admin/events/${e._id}/registrations`}>Registrations</Link>
                       </Button>
                       <Button size="sm" variant="destructive" onClick={() => openDeleteDialog(e._id!)}>
                         Delete
@@ -506,6 +530,17 @@ export default function EventsAdminPage() {
               />
             </div>
           )}
+
+          {/* Team Size */}
+          <div className="grid gap-2 sm:col-span-2">
+            <label className="text-sm font-medium">Team Size (optional — leave blank for individual)</label>
+            <div className="grid grid-cols-3 gap-2">
+              <input type="number" min="1" max="20" value={aMinTeam} onChange={e => setAMinTeam(e.target.value)} placeholder="Min (e.g. 2)" className="glass rounded-md px-3 py-2" />
+              <input type="number" min="1" max="20" value={aMaxTeam} onChange={e => setAMaxTeam(e.target.value)} placeholder="Max (e.g. 4)" className="glass rounded-md px-3 py-2" />
+              <input type="text" value={aTeamLabel} onChange={e => setATeamLabel(e.target.value)} placeholder="Label (e.g. Team Name)" className="glass rounded-md px-3 py-2" />
+            </div>
+            <p className="text-xs text-muted-foreground">Min members · Max members · Label shown to registrants</p>
+          </div>
 
           <div className="flex gap-2 sm:col-span-2">
             <Button onClick={addEvent} disabled={!addCanSave} className="bg-emerald-600 hover:bg-emerald-700">
@@ -709,6 +744,17 @@ export default function EventsAdminPage() {
                 />
               </div>
             )}
+
+            {/* Team Size */}
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">Team Size (optional — leave blank for individual)</label>
+              <div className="grid grid-cols-3 gap-2">
+                <input type="number" min="1" max="20" value={eMinTeam} onChange={e => setEMinTeam(e.target.value)} placeholder="Min (e.g. 2)" className="glass rounded-md px-3 py-2" />
+                <input type="number" min="1" max="20" value={eMaxTeam} onChange={e => setEMaxTeam(e.target.value)} placeholder="Max (e.g. 4)" className="glass rounded-md px-3 py-2" />
+                <input type="text" value={eTeamLabel} onChange={e => setETeamLabel(e.target.value)} placeholder="Label (e.g. Team Name)" className="glass rounded-md px-3 py-2" />
+              </div>
+              <p className="text-xs text-muted-foreground">Min members · Max members · Label shown to registrants</p>
+            </div>
           </div>
 
           <DialogFooter className="mt-4">

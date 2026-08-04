@@ -8,6 +8,9 @@ export interface EventType {
   description: string;
   location?: string;
   googleFormLink?: string;
+  minTeamSize?: number;
+  maxTeamSize?: number;
+  teamNameLabel?: string;
 }
 
 // Member Interface

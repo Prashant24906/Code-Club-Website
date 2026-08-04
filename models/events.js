@@ -10,6 +10,10 @@ const eventSchema = new mongoose.Schema(
     location: String,
     time: String,
     googleFormLink: String,
+    // Team size (undefined = individual event)
+    minTeamSize: { type: Number, default: null },
+    maxTeamSize: { type: Number, default: null },
+    teamNameLabel: { type: String, default: "" }, // e.g. "Team Name"
   },
   { timestamps: true }
 );
