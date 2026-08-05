@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { gsap } from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
-import { Calendar, MapPin, Clock, ChevronLeft, ChevronRight } from "lucide-react"
+import { Calendar, MapPin, Clock, ChevronLeft, ChevronRight, Loader2 } from "lucide-react"
 import { Markdown } from "@/components/ui/markdown"
 import { useUser } from "@/hooks/use-user"
 import { AuthModal } from "@/components/auth-modal"
@@ -187,6 +187,7 @@ export function Events() {
   const { user } = useUser()
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [pendingFormLink, setPendingFormLink] = useState<string | null>(null)
+  const [navigatingId, setNavigatingId] = useState<string | null>(null)
 
   useEffect(() => {
     fetch("/api/admin/settings")
@@ -342,7 +343,7 @@ export function Events() {
                 {upcomingEvents.map((event) => {
                   const imgs = getImages(event)
                   return (
-                    <Link key={event._id} href={`/events/${event._id}`} className="event-card block glass-card rounded-2xl p-3 sm:p-4 group cursor-pointer w-full max-w-[320px] border border-white/10 hover:-translate-y-1 transition-transform duration-300">
+                    <Link key={event._id} href={`/events/${event._id}`} onClick={() => setNavigatingId(event._id)} className="event-card relative block glass-card rounded-2xl p-3 sm:p-4 group cursor-pointer w-full max-w-[320px] border border-white/10 hover:-translate-y-1 transition-transform duration-300">
                         <div className={`relative bg-black/20 rounded-xl overflow-hidden border border-white/10 mb-4 ${eventAspectById[event._id] === "square" ? "aspect-square" : "aspect-[3/4]"}`}>
                           <ImageCarousel images={imgs} alt={event.title} className="absolute inset-0" />
                           <div className="absolute top-3 right-3 bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-medium z-20">Upcoming</div>
@@ -357,6 +358,11 @@ export function Events() {
                         <div className="inline-flex w-full justify-center bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium transition-transform hover:scale-[1.02]">
                           Register Now
                         </div>
+                        {navigatingId === event._id && (
+                          <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/50 backdrop-blur-sm rounded-2xl">
+                            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                          </div>
+                        )}
                     </Link>
                   )
                 })}
@@ -411,7 +417,14 @@ export function Events() {
                 {pastEvents.map((event) => {
                   const imgs = getImages(event)
                   return (
-                    <div key={event._id} className="event-card glass-card rounded-2xl p-3 sm:p-4 group cursor-pointer opacity-80 hover:opacity-100 w-full max-w-[300px] border border-white/10 hover:-translate-y-1 transition-all duration-300" onClick={() => router.push(`/events/${event._id}`)}>
+                    <div 
+                      key={event._id} 
+                      className="event-card relative glass-card rounded-2xl p-3 sm:p-4 group cursor-pointer opacity-80 hover:opacity-100 w-full max-w-[300px] border border-white/10 hover:-translate-y-1 transition-all duration-300" 
+                      onClick={() => {
+                        setNavigatingId(event._id)
+                        router.push(`/events/${event._id}`)
+                      }}
+                    >
                       <div className={`relative bg-black/20 rounded-xl overflow-hidden border border-white/10 mb-4 ${eventAspectById[event._id] === "square" ? "aspect-square" : "aspect-[3/4]"}`}>
                         <ImageCarousel images={imgs} alt={event.title} className="absolute inset-0" />
                         <div className="absolute top-2 right-2 bg-muted text-muted-foreground px-2 py-1 rounded-full text-xs z-20">Completed</div>
@@ -419,6 +432,11 @@ export function Events() {
                       <h4 className="text-base font-semibold mb-2 group-hover:text-primary transition-colors line-clamp-2 min-h-[48px]">{event.title}</h4>
                       <Markdown content={event.description || ""} className="text-xs mb-3 min-h-[36px] max-h-[56px] overflow-hidden [mask-image:linear-gradient(to_bottom,black_75%,transparent)]" />
                       <div className="flex items-center justify-between text-xs text-muted-foreground"><span>{new Date(event.date).toLocaleDateString("en-US")}</span></div>
+                      {navigatingId === event._id && (
+                        <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/50 backdrop-blur-sm rounded-2xl">
+                          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                        </div>
+                      )}
                     </div>
                   )
                 })}
