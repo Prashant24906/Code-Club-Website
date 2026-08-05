@@ -29,7 +29,12 @@ export async function GET(
   await connectDB();
   const { id: eventId } = await params;
   const existing = await Registration.findOne({ eventId, userId }).lean();
-  return NextResponse.json({ registered: !!existing });
+  
+  if (existing) {
+    const event = await Event.findById(eventId).select("whatsappLink").lean() as { whatsappLink?: string } | null;
+    return NextResponse.json({ registered: true, whatsappLink: event?.whatsappLink });
+  }
+  return NextResponse.json({ registered: false });
 }
 
 // ── POST — register (login required) ────────────────────────────────────────
@@ -45,10 +50,16 @@ export async function POST(
   const event = await Event.findById(eventId).lean() as {
     minTeamSize?: number | null;
     maxTeamSize?: number | null;
+    registrationStartTime?: string | Date | null;
   } | null;
 
   if (!event) {
     return NextResponse.json({ error: "Event not found." }, { status: 404 });
+  }
+
+  // Check if registration is open
+  if (event.registrationStartTime && new Date(event.registrationStartTime) > new Date()) {
+    return NextResponse.json({ error: "Registration has not opened yet." }, { status: 403 });
   }
 
   const body = await req.json().catch(() => ({})) as Record<string, unknown>;
@@ -114,5 +125,9 @@ export async function POST(
     teammates,
   });
 
-  return NextResponse.json({ success: true, registration }, { status: 201 });
+  return NextResponse.json({ 
+    success: true, 
+    registration,
+    whatsappLink: event.whatsappLink
+  }, { status: 201 });
 }

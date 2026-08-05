@@ -49,6 +49,9 @@ export default async function EventPage({ params }: Props) {
     prizePool: Array.isArray(raw.prizePool) 
       ? raw.prizePool.map((p: any) => ({ position: String(p.position || ""), amount: String(p.amount || "") })) 
       : [],
+    registrationStartTime: raw.registrationStartTime instanceof Date 
+      ? raw.registrationStartTime.toISOString() 
+      : (raw.registrationStartTime ? String(raw.registrationStartTime) : null),
   };
 
   return (

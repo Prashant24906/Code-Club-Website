@@ -12,6 +12,8 @@ export interface EventType {
   maxTeamSize?: number;
   teamNameLabel?: string;
   prizePool?: { position: string, amount: string }[];
+  registrationStartTime?: string | null;
+  whatsappLink?: string;
 }
 
 // Member Interface

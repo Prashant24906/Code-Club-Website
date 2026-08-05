@@ -39,6 +39,8 @@ export default function EventsAdminPage() {
   const [aMaxTeam, setAMaxTeam] = useState("")
   const [aTeamLabel, setATeamLabel] = useState("")
   const [aPrizePool, setAPrizePool] = useState<{position: string, amount: string}[]>([])
+  const [aRegistrationStart, setARegistrationStart] = useState("")
+  const [aWhatsAppLink, setAWhatsAppLink] = useState("")
 
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editOpen, setEditOpen] = useState(false)
@@ -53,6 +55,8 @@ export default function EventsAdminPage() {
   const [eMaxTeam, setEMaxTeam] = useState("")
   const [eTeamLabel, setETeamLabel] = useState("")
   const [ePrizePool, setEPrizePool] = useState<{position: string, amount: string}[]>([])
+  const [eRegistrationStart, setERegistrationStart] = useState("")
+  const [eWhatsAppLink, setEWhatsAppLink] = useState("")
 
   const [addCropOpen, setAddCropOpen] = useState(false)
   const [addCropSrc, setAddCropSrc] = useState<string | null>(null)
@@ -102,6 +106,8 @@ export default function EventsAdminPage() {
       maxTeamSize: aMaxTeam ? Number(aMaxTeam) : undefined,
       teamNameLabel: aTeamLabel.trim() || undefined,
       prizePool: aPrizePool.filter(p => p.position.trim() && p.amount.trim()),
+      registrationStartTime: aRegistrationStart ? new Date(aRegistrationStart).toISOString() : null,
+      whatsappLink: aWhatsAppLink.trim() || undefined,
     }
 
     try {
@@ -133,6 +139,8 @@ export default function EventsAdminPage() {
       maxTeamSize: eMaxTeam ? Number(eMaxTeam) : undefined,
       teamNameLabel: eTeamLabel.trim() || undefined,
       prizePool: ePrizePool.filter(p => p.position.trim() && p.amount.trim()),
+      registrationStartTime: eRegistrationStart ? new Date(eRegistrationStart).toISOString() : null,
+      whatsappLink: eWhatsAppLink.trim() || undefined,
     }
 
     try {
@@ -187,6 +195,8 @@ export default function EventsAdminPage() {
     setAMaxTeam("")
     setATeamLabel("")
     setAPrizePool([])
+    setARegistrationStart("")
+    setAWhatsAppLink("")
   }
   function resetEditForm() {
     setEditingId(null)
@@ -201,6 +211,8 @@ export default function EventsAdminPage() {
     setEMaxTeam("")
     setETeamLabel("")
     setEPrizePool([])
+    setERegistrationStart("")
+    setEWhatsAppLink("")
   }
 
   const onAddDrop = (files: File[]) => {
@@ -297,6 +309,16 @@ export default function EventsAdminPage() {
     setEMaxTeam(event.maxTeamSize != null ? String(event.maxTeamSize) : "")
     setETeamLabel(event.teamNameLabel || "")
     setEPrizePool(event.prizePool || [])
+    setEWhatsAppLink(event.whatsappLink || "")
+    
+    if (event.registrationStartTime) {
+      const d = new Date(event.registrationStartTime)
+      const pad = (n: number) => n.toString().padStart(2, '0')
+      const localStr = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+      setERegistrationStart(localStr)
+    } else {
+      setERegistrationStart("")
+    }
     
     // Support legacy data structure
     if (event.images && event.images.length > 0) {
@@ -538,6 +560,19 @@ export default function EventsAdminPage() {
             </div>
           )}
 
+          <div className="grid gap-2 sm:col-span-2">
+            <label htmlFor="a-whatsapp" className="text-sm font-medium">
+              WhatsApp Group Link (optional)
+            </label>
+            <input
+              id="a-whatsapp"
+              value={aWhatsAppLink}
+              onChange={(e) => setAWhatsAppLink(e.target.value)}
+              placeholder="https://chat.whatsapp.com/..."
+              className="glass rounded-md px-3 py-2"
+            />
+          </div>
+
           {/* Team Size */}
           <div className="grid gap-2 sm:col-span-2">
             <label className="text-sm font-medium">Team Size (optional — leave blank for individual)</label>
@@ -592,6 +627,22 @@ export default function EventsAdminPage() {
             )}
           </div>
 
+          {/* Registration Start Time */}
+          <div className="grid gap-2 sm:col-span-2">
+            <label htmlFor="a-reg-start" className="text-sm font-medium">
+              Registration Start Time (optional)
+            </label>
+            <input
+              id="a-reg-start"
+              type="datetime-local"
+              value={aRegistrationStart}
+              onChange={(e) => setARegistrationStart(e.target.value)}
+              className="glass rounded-md px-3 py-2"
+            />
+            <p className="text-xs text-muted-foreground">If set, users cannot register until this time.</p>
+          </div>
+
+
           <div className="flex gap-2 sm:col-span-2">
             <Button onClick={addEvent} disabled={!addCanSave} className="bg-emerald-600 hover:bg-emerald-700">
               Submit
@@ -638,7 +689,7 @@ export default function EventsAdminPage() {
       />
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="glass-card sm:max-w-2xl max-h-[90vh] overflow-y-auto border-white/10 bg-[#0b1220] text-blue-50" style={{ scrollbarWidth: "thin" }}>
           <DialogHeader>
             <DialogTitle>Edit Event</DialogTitle>
           </DialogHeader>
@@ -708,7 +759,7 @@ export default function EventsAdminPage() {
             )}
           </div>
 
-          <div className="grid gap-4">
+          <div className="grid gap-4 sm:grid-cols-2">
             <div className="grid gap-2">
               <label htmlFor="e-title" className="text-sm font-medium">
                 Title
@@ -755,7 +806,7 @@ export default function EventsAdminPage() {
                 </Popover>
               </div>
             </div>
-            <div className="grid gap-2">
+            <div className="grid gap-2 sm:col-span-2">
               <label htmlFor="e-location" className="text-sm font-medium">
                 Location (optional)
               </label>
@@ -766,7 +817,7 @@ export default function EventsAdminPage() {
                 className="glass rounded-md px-3 py-2"
               />
             </div>
-            <div className="grid gap-2">
+            <div className="grid gap-2 sm:col-span-2">
               <label htmlFor="e-desc" className="text-sm font-medium">
                 Description
               </label>
@@ -781,7 +832,7 @@ export default function EventsAdminPage() {
             </div>
 
             {editIsFuture && (
-              <div className="grid gap-2">
+              <div className="grid gap-2 sm:col-span-2">
                 <label htmlFor="e-gform" className="text-sm font-medium">
                   Google Form Link (optional)
                 </label>
@@ -795,8 +846,21 @@ export default function EventsAdminPage() {
               </div>
             )}
 
+            <div className="grid gap-2 sm:col-span-2">
+              <label htmlFor="e-whatsapp" className="text-sm font-medium">
+                WhatsApp Group Link (optional)
+              </label>
+              <input
+                id="e-whatsapp"
+                value={eWhatsAppLink}
+                onChange={(e) => setEWhatsAppLink(e.target.value)}
+                placeholder="https://chat.whatsapp.com/..."
+                className="glass rounded-md px-3 py-2"
+              />
+            </div>
+
             {/* Team Size */}
-            <div className="grid gap-2">
+            <div className="grid gap-2 sm:col-span-2">
               <label className="text-sm font-medium">Team Size (optional — leave blank for individual)</label>
               <div className="grid grid-cols-3 gap-2">
                 <input type="number" min="1" max="20" value={eMinTeam} onChange={e => setEMinTeam(e.target.value)} placeholder="Min (e.g. 2)" className="glass rounded-md px-3 py-2" />
@@ -807,7 +871,7 @@ export default function EventsAdminPage() {
             </div>
 
             {/* Prize Pool */}
-            <div className="grid gap-2">
+            <div className="grid gap-2 sm:col-span-2">
               <label className="text-sm font-medium flex items-center justify-between">
                 <span className="flex items-center gap-2">🏆 Prize Pool (optional)</span>
                 <Button type="button" size="sm" variant="outline" onClick={() => setEPrizePool([...ePrizePool, {position: "", amount: ""}])}>
@@ -847,6 +911,21 @@ export default function EventsAdminPage() {
               ) : (
                  <p className="text-xs text-muted-foreground">No prize pool added.</p>
               )}
+            </div>
+
+            {/* Registration Start Time */}
+            <div className="grid gap-2 sm:col-span-2">
+              <label htmlFor="e-reg-start" className="text-sm font-medium">
+                Registration Start Time (optional)
+              </label>
+              <input
+                id="e-reg-start"
+                type="datetime-local"
+                value={eRegistrationStart}
+                onChange={(e) => setERegistrationStart(e.target.value)}
+                className="glass rounded-md px-3 py-2"
+              />
+              <p className="text-xs text-muted-foreground">If set, users cannot register until this time.</p>
             </div>
           </div>
 

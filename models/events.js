@@ -18,6 +18,8 @@ const eventSchema = new mongoose.Schema(
       type: [{ position: String, amount: String }],
       default: []
     },
+    registrationStartTime: { type: Date, default: null },
+    whatsappLink: { type: String, default: "" },
   },
   { timestamps: true }
 );
