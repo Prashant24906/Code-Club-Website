@@ -10,6 +10,7 @@ import { Markdown } from "@/components/ui/markdown"
 import { useUser } from "@/hooks/use-user"
 import { AuthModal } from "@/components/auth-modal"
 import { useCachedEvents } from "@/lib/data-cache"
+import ElectricBorder from "./ElectricBorder"
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -107,9 +108,8 @@ function ImageCarousel({ images, alt, className = "", large = false }: CarouselP
           src={src}
           alt={`${alt} ${i + 1}`}
           draggable={false}
-          className={`absolute inset-0 w-full h-full object-contain transition-opacity duration-300 ${
-            i === idx ? "opacity-100" : "opacity-0 pointer-events-none"
-          }`}
+          className={`absolute inset-0 w-full h-full object-contain transition-opacity duration-300 ${i === idx ? "opacity-100" : "opacity-0 pointer-events-none"
+            }`}
           style={{ padding: "8px" }}
         />
       ))}
@@ -138,9 +138,8 @@ function ImageCarousel({ images, alt, className = "", large = false }: CarouselP
               <button
                 key={i}
                 onClick={(e) => { e.stopPropagation(); goTo(i) }}
-                className={`rounded-full transition-all duration-200 ${
-                  i === idx ? "bg-white w-4 h-1.5" : "bg-white/50 w-1.5 h-1.5 hover:bg-white/80"
-                }`}
+                className={`rounded-full transition-all duration-200 ${i === idx ? "bg-white w-4 h-1.5" : "bg-white/50 w-1.5 h-1.5 hover:bg-white/80"
+                  }`}
                 aria-label={`Go to image ${i + 1}`}
               />
             ))}
@@ -215,7 +214,7 @@ export function Events() {
       }
     }
     load()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [upcomingPage])
 
   // Fetch past events — skip page 1 if already seeded from cache
@@ -237,7 +236,7 @@ export function Events() {
       }
     }
     load()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pastPage])
 
   // Determine aspect ratio from first image of each event (runs whenever either page changes)
@@ -267,7 +266,7 @@ export function Events() {
       setEventAspectById((prev) => ({ ...prev, ...next }))
     })
     return () => { cancelled = true }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [upcomingEvents, pastEvents])
 
   const isLoading = upcomingLoading && pastLoading
@@ -344,20 +343,20 @@ export function Events() {
                   const imgs = getImages(event)
                   return (
                     <Link key={event._id} href={`/events/${event._id}`} className="event-card block glass-card rounded-2xl p-3 sm:p-4 group cursor-pointer w-full max-w-[320px] border border-white/10 hover:-translate-y-1 transition-transform duration-300">
-                      <div className={`relative bg-black/20 rounded-xl overflow-hidden border border-white/10 mb-4 ${eventAspectById[event._id] === "square" ? "aspect-square" : "aspect-[3/4]"}`}>
-                        <ImageCarousel images={imgs} alt={event.title} className="absolute inset-0" />
-                        <div className="absolute top-3 right-3 bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-medium z-20">Upcoming</div>
-                      </div>
-                      <h4 className="text-lg font-semibold mb-2 group-hover:text-primary transition-colors line-clamp-2 min-h-[56px]">{event.title}</h4>
-                      <Markdown content={event.description || ""} className="mb-4 text-sm min-h-[60px] max-h-[72px] overflow-hidden [mask-image:linear-gradient(to_bottom,black_75%,transparent)]" />
-                      <div className="space-y-2 text-sm text-muted-foreground mb-4">
-                        <div className="flex items-center space-x-2"><Calendar className="h-4 w-4" style={{ color: "var(--accent-blue)" }} /><span>{new Date(event.date).toLocaleDateString("en-US")}</span></div>
-                        {event.time && <div className="flex items-center space-x-2"><Clock className="h-4 w-4" style={{ color: "var(--accent-blue)" }} /><span>{event.time}</span></div>}
-                        {event.location && <div className="flex items-center space-x-2"><MapPin className="h-4 w-4" style={{ color: "var(--accent-blue)" }} /><span className="truncate">{event.location}</span></div>}
-                      </div>
-                      <div className="inline-flex w-full justify-center bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium transition-transform hover:scale-[1.02]">
-                        Register Now
-                      </div>
+                        <div className={`relative bg-black/20 rounded-xl overflow-hidden border border-white/10 mb-4 ${eventAspectById[event._id] === "square" ? "aspect-square" : "aspect-[3/4]"}`}>
+                          <ImageCarousel images={imgs} alt={event.title} className="absolute inset-0" />
+                          <div className="absolute top-3 right-3 bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-medium z-20">Upcoming</div>
+                        </div>
+                        <h4 className="text-lg font-semibold mb-2 group-hover:text-primary transition-colors line-clamp-2 min-h-[56px]">{event.title}</h4>
+                        <Markdown content={event.description || ""} className="mb-4 text-sm min-h-[60px] max-h-[72px] overflow-hidden [mask-image:linear-gradient(to_bottom,black_75%,transparent)]" />
+                        <div className="space-y-2 text-sm text-muted-foreground mb-4">
+                          <div className="flex items-center space-x-2"><Calendar className="h-4 w-4" style={{ color: "var(--accent-blue)" }} /><span>{new Date(event.date).toLocaleDateString("en-US")}</span></div>
+                          {event.time && <div className="flex items-center space-x-2"><Clock className="h-4 w-4" style={{ color: "var(--accent-blue)" }} /><span>{event.time}</span></div>}
+                          {event.location && <div className="flex items-center space-x-2"><MapPin className="h-4 w-4" style={{ color: "var(--accent-blue)" }} /><span className="truncate">{event.location}</span></div>}
+                        </div>
+                        <div className="inline-flex w-full justify-center bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium transition-transform hover:scale-[1.02]">
+                          Register Now
+                        </div>
                     </Link>
                   )
                 })}
