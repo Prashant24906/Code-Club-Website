@@ -6,6 +6,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Users, UserX } from "lucide-react";
 import { useCachedMembersByDept } from "@/lib/data-cache";
 import OptionWheel from "./OptionWheel";
+import LineSideBar from "./LineSideBar";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -26,7 +27,7 @@ export function Members() {
       setMembers(cachedMembers);
       setLoading(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [membersByDept]);
 
   // Animate heading on scroll
@@ -99,9 +100,9 @@ export function Members() {
 
   const deptColor = (name: string): string => {
     const n = name.toLowerCase();
-    if (n.includes("tech"))    return "blue";
-    if (n.includes("market"))  return "purple";
-    if (n.includes("doc"))     return "emerald";
+    if (n.includes("tech")) return "blue";
+    if (n.includes("market")) return "purple";
+    if (n.includes("doc")) return "emerald";
     if (n.includes("event") || n.includes("logistic")) return "indigo";
     if (n.includes("design")) return "rose";
     return "orange";
@@ -124,9 +125,9 @@ export function Members() {
 
   const deptRank = (name: string): number => {
     const n = name.toLowerCase();
-    if (n.includes("tech"))    return 0;
-    if (n.includes("market"))  return 1;
-    if (n.includes("doc"))     return 2;
+    if (n.includes("tech")) return 0;
+    if (n.includes("market")) return 1;
+    if (n.includes("doc")) return 2;
     if (n.includes("event") || n.includes("logistic")) return 3;
     if (n.includes("design")) return 4;
     return 99;
@@ -141,12 +142,12 @@ export function Members() {
 
   const getColorClasses = (color: string) => {
     const colors: Record<string, { stripe: string; badge: string; accent: string; border: string; glow: string }> = {
-      blue:    { stripe: "from-blue-500/80 to-cyan-500/80",       badge: "bg-blue-500/10 text-blue-600 dark:text-blue-300",         accent: "text-blue-600 dark:text-blue-300",       border: "border-blue-500/20",    glow: "#38bdf8" },
-      emerald: { stripe: "from-emerald-500/80 to-teal-500/80",    badge: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-300", accent: "text-emerald-600 dark:text-emerald-300", border: "border-emerald-500/20", glow: "#34d399" },
-      indigo:  { stripe: "from-indigo-500/80 to-sky-500/80",      badge: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-300",   accent: "text-indigo-600 dark:text-indigo-300",   border: "border-indigo-500/20",  glow: "#818cf8" },
-      purple:  { stripe: "from-fuchsia-500/80 to-purple-500/80",  badge: "bg-purple-500/10 text-purple-600 dark:text-purple-300",   accent: "text-purple-600 dark:text-purple-300",   border: "border-purple-500/20",  glow: "#c084fc" },
-      orange:  { stripe: "from-orange-500/80 to-amber-500/80",    badge: "bg-orange-500/10 text-orange-600 dark:text-orange-300",   accent: "text-orange-600 dark:text-orange-300",   border: "border-orange-500/20",  glow: "#fb923c" },
-      rose:    { stripe: "from-rose-500/80 to-pink-500/80",       badge: "bg-rose-500/10 text-rose-600 dark:text-rose-300",         accent: "text-rose-600 dark:text-rose-300",       border: "border-rose-500/20",    glow: "#fb7185" },
+      blue: { stripe: "from-blue-500/80 to-cyan-500/80", badge: "bg-blue-500/10 text-blue-600 dark:text-blue-300", accent: "text-blue-600 dark:text-blue-300", border: "border-blue-500/20", glow: "#38bdf8" },
+      emerald: { stripe: "from-emerald-500/80 to-teal-500/80", badge: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-300", accent: "text-emerald-600 dark:text-emerald-300", border: "border-emerald-500/20", glow: "#34d399" },
+      indigo: { stripe: "from-indigo-500/80 to-sky-500/80", badge: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-300", accent: "text-indigo-600 dark:text-indigo-300", border: "border-indigo-500/20", glow: "#818cf8" },
+      purple: { stripe: "from-fuchsia-500/80 to-purple-500/80", badge: "bg-purple-500/10 text-purple-600 dark:text-purple-300", accent: "text-purple-600 dark:text-purple-300", border: "border-purple-500/20", glow: "#c084fc" },
+      orange: { stripe: "from-orange-500/80 to-amber-500/80", badge: "bg-orange-500/10 text-orange-600 dark:text-orange-300", accent: "text-orange-600 dark:text-orange-300", border: "border-orange-500/20", glow: "#fb923c" },
+      rose: { stripe: "from-rose-500/80 to-pink-500/80", badge: "bg-rose-500/10 text-rose-600 dark:text-rose-300", accent: "text-rose-600 dark:text-rose-300", border: "border-rose-500/20", glow: "#fb7185" },
     };
     return colors[color] || colors.blue;
   };
@@ -247,22 +248,25 @@ export function Members() {
                 className="pointer-events-none absolute inset-x-2 top-1/2 -translate-y-1/2 h-[1.5px] rounded-full opacity-20 transition-all duration-500"
                 style={{ background: cc.glow }}
               />
-              <OptionWheel
+              <LineSideBar
                 items={wheelItems}
-                defaultSelected={0}
-                onChange={(idx) => setSelectedDeptIndex(idx)}
-                textColor="rgba(255,255,255,0.65)"
-                activeColor="#ffffff"
-                side="left"
-                fontSize={1.25}
-                spacing={2.0}
-                curve={0.5}
-                tilt={5}
-                blur={1.2}
-                fade={0.32}
-                minOpacity={0.18}
-                smoothing={180}
-                inset={16}
+                accentColor="#A855F7"
+                textColor="#c4c4c4"
+                markerColor="#6c6c6c"
+                showIndex
+                showMarker
+                proximityRadius={100}
+                maxShift={30}
+                falloff="smooth"
+                markerLength={60}
+                markerGap={0}
+                tickScale={0.5}
+                scaleTick
+                itemGap={20}
+                fontSize={1.1}
+                smoothing={100}
+                defaultActive={0}
+                onItemClick={(idx) => setSelectedDeptIndex(idx)}
               />
             </div>
 
@@ -271,76 +275,76 @@ export function Members() {
               {dept && (
                 <div className={`glass-card rounded-3xl border overflow-hidden ${cc.border}`}>
                   <div className={`h-1 w-full bg-gradient-to-r ${cc.stripe}`} />
-                    <div className="p-5 md:p-7">
+                  <div className="p-5 md:p-7">
 
-                      {/* Header */}
-                      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                        <h3 className="text-2xl font-bold text-foreground">{dept.name}</h3>
-                        <div className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-medium ${cc.badge}`}>
-                          <Users className="h-4 w-4" />
-                          <span>{dept.members.length + (dept.lead ? 1 : 0) + (dept.coHead ? 1 : 0)} Members</span>
+                    {/* Header */}
+                    <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <h3 className="text-2xl font-bold text-foreground">{dept.name}</h3>
+                      <div className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-medium ${cc.badge}`}>
+                        <Users className="h-4 w-4" />
+                        <span>{dept.members.length + (dept.lead ? 1 : 0) + (dept.coHead ? 1 : 0)} Members</span>
+                      </div>
+                    </div>
+
+                    {/* Head */}
+                    {dept.lead && (
+                      <div className="mb-4">
+                        <div className={`glass-card rounded-2xl p-4 sm:p-5 border ${cc.border} max-w-[380px] sm:max-w-none mx-auto hover:-translate-y-1 transition-transform duration-300`}>
+                          <div className="grid grid-cols-1 sm:grid-cols-[170px_1fr] gap-4 items-center">
+                            <img src={dept.lead.image || "/placeholder.svg"} loading="lazy" alt={dept.lead.name} className="w-[130px] h-[130px] sm:w-[170px] sm:h-[170px] aspect-square rounded-xl object-cover mx-auto" />
+                            <div className="min-w-0">
+                              <p className={`inline-flex rounded-full px-3 py-1 text-xs uppercase tracking-wider font-semibold mb-3 ${cc.badge}`}>Head</p>
+                              <h4 className="text-xl font-semibold text-foreground truncate">{dept.lead.name}</h4>
+                              <p className="text-sm text-muted-foreground truncate mb-3">{dept.lead.role}</p>
+                              <p className="text-sm text-foreground/85">Leading {dept.name} with focus on execution, mentoring, and quality outcomes.</p>
+                            </div>
+                          </div>
                         </div>
                       </div>
+                    )}
 
-                      {/* Head */}
-                      {dept.lead && (
-                        <div className="mb-4">
-                          <div className={`glass-card rounded-2xl p-4 sm:p-5 border ${cc.border} max-w-[380px] sm:max-w-none mx-auto hover:-translate-y-1 transition-transform duration-300`}>
-                            <div className="grid grid-cols-1 sm:grid-cols-[170px_1fr] gap-4 items-center">
-                              <img src={dept.lead.image || "/placeholder.svg"} loading="lazy" alt={dept.lead.name} className="w-[130px] h-[130px] sm:w-[170px] sm:h-[170px] aspect-square rounded-xl object-cover mx-auto" />
-                              <div className="min-w-0">
-                                <p className={`inline-flex rounded-full px-3 py-1 text-xs uppercase tracking-wider font-semibold mb-3 ${cc.badge}`}>Head</p>
-                                <h4 className="text-xl font-semibold text-foreground truncate">{dept.lead.name}</h4>
-                                <p className="text-sm text-muted-foreground truncate mb-3">{dept.lead.role}</p>
-                                <p className="text-sm text-foreground/85">Leading {dept.name} with focus on execution, mentoring, and quality outcomes.</p>
-                              </div>
+                    {/* Co-Head */}
+                    {dept.coHead && (
+                      <div className="mb-5">
+                        <div className="glass-card rounded-2xl p-3 sm:p-4 border border-white/10 max-w-[340px] sm:max-w-none mx-auto hover:-translate-y-1 transition-transform duration-300">
+                          <div className="grid grid-cols-1 sm:grid-cols-[140px_1fr] gap-4 items-center">
+                            <img src={dept.coHead.image || "/placeholder.svg"} loading="lazy" alt={dept.coHead.name} className="w-[110px] h-[110px] sm:w-[140px] sm:h-[140px] aspect-square rounded-xl object-cover mx-auto" />
+                            <div className="min-w-0">
+                              <p className={`inline-flex rounded-full px-3 py-1 text-xs uppercase tracking-wider font-semibold mb-2 ${cc.badge} opacity-80`}>Co-Head</p>
+                              <h4 className="text-lg font-semibold text-foreground truncate">{dept.coHead.name}</h4>
+                              <p className="text-sm text-muted-foreground truncate">{dept.coHead.role}</p>
                             </div>
                           </div>
                         </div>
-                      )}
+                      </div>
+                    )}
 
-                      {/* Co-Head */}
-                      {dept.coHead && (
-                        <div className="mb-5">
-                          <div className="glass-card rounded-2xl p-3 sm:p-4 border border-white/10 max-w-[340px] sm:max-w-none mx-auto hover:-translate-y-1 transition-transform duration-300">
-                            <div className="grid grid-cols-1 sm:grid-cols-[140px_1fr] gap-4 items-center">
-                              <img src={dept.coHead.image || "/placeholder.svg"} loading="lazy" alt={dept.coHead.name} className="w-[110px] h-[110px] sm:w-[140px] sm:h-[140px] aspect-square rounded-xl object-cover mx-auto" />
-                              <div className="min-w-0">
-                                <p className={`inline-flex rounded-full px-3 py-1 text-xs uppercase tracking-wider font-semibold mb-2 ${cc.badge} opacity-80`}>Co-Head</p>
-                                <h4 className="text-lg font-semibold text-foreground truncate">{dept.coHead.name}</h4>
-                                <p className="text-sm text-muted-foreground truncate">{dept.coHead.role}</p>
-                              </div>
+                    {/* Regular members grid */}
+                    {dept.members.length > 0 ? (
+                      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 justify-items-center">
+                        {dept.members.map((member) => (
+                          <div key={member._id} className="glass-card rounded-2xl p-2.5 sm:p-3 border border-white/10 h-full w-full hover:-translate-y-1 transition-transform duration-300">
+                            <div className="mb-3 flex justify-center">
+                              <img src={member.image || "/placeholder.svg"} loading="lazy" alt={member.name} className="w-[120px] h-[120px] sm:w-[170px] sm:h-[170px] rounded-xl object-cover" />
                             </div>
+                            <h5 className="text-sm font-semibold text-foreground truncate mb-1 text-center">{member.name}</h5>
+                            <p className="text-xs text-muted-foreground truncate text-center">{member.role}</p>
+                            <p className={`text-xs mt-3 text-center ${cc.accent}`}>{dept.name}</p>
                           </div>
+                        ))}
+                      </div>
+                    ) : (
+                      !dept.lead && !dept.coHead && (
+                        <div className="rounded-2xl border border-dashed border-white/20 p-5 text-sm text-muted-foreground text-center">
+                          No additional team members listed yet.
                         </div>
-                      )}
+                      )
+                    )}
 
-                      {/* Regular members grid */}
-                      {dept.members.length > 0 ? (
-                        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 justify-items-center">
-                          {dept.members.map((member) => (
-                            <div key={member._id} className="glass-card rounded-2xl p-2.5 sm:p-3 border border-white/10 h-full w-full hover:-translate-y-1 transition-transform duration-300">
-                              <div className="mb-3 flex justify-center">
-                                <img src={member.image || "/placeholder.svg"} loading="lazy" alt={member.name} className="w-[120px] h-[120px] sm:w-[170px] sm:h-[170px] rounded-xl object-cover" />
-                              </div>
-                              <h5 className="text-sm font-semibold text-foreground truncate mb-1 text-center">{member.name}</h5>
-                              <p className="text-xs text-muted-foreground truncate text-center">{member.role}</p>
-                              <p className={`text-xs mt-3 text-center ${cc.accent}`}>{dept.name}</p>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        !dept.lead && !dept.coHead && (
-                          <div className="rounded-2xl border border-dashed border-white/20 p-5 text-sm text-muted-foreground text-center">
-                            No additional team members listed yet.
-                          </div>
-                        )
-                      )}
-
-                    </div>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
