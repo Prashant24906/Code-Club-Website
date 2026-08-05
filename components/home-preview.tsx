@@ -153,60 +153,63 @@ function EventsPreview() {
                   href={`/events/${ev._id}`}
                   key={ev._id}
                   onClick={() => setLoadingId(ev._id)}
-                  className="ep-card glass-card rounded-2xl overflow-hidden flex flex-col group hover:-translate-y-2 transition-transform duration-300 relative"
+                  className="ep-card group hover:-translate-y-2 transition-transform duration-300 block h-full relative"
                 >
                   <ElectricBorder
                     color="#7df9ff"
                     speed={1}
                     chaos={0.12}
+                    className="h-full"
                     style={{ borderRadius: 16 }}
                   >
-                    {loadingId === ev._id && (
-                      <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-                        <Loader2 className="w-10 h-10 text-sky-400 animate-spin" />
-                      </div>
-                    )}
-                    {imgs[0] ? (
-                      <div className="relative h-40 w-full overflow-hidden">
-                        <Image
-                          src={imgs[0]}
-                          alt={ev.title}
-                          fill
-                          sizes="(max-width:768px) 100vw, 33vw"
-                          className="object-cover group-hover:scale-105 transition-transform duration-500"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                      </div>
-                    ) : (
-                      <div className="h-40 flex items-center justify-center" style={{ background: "linear-gradient(135deg,#38bdf820,#6366f120)" }}>
-                        <Calendar size={36} className="text-sky-400 opacity-60" />
-                      </div>
-                    )}
-                    <div className="p-5 flex flex-col flex-1">
-                      <h3 className="font-bold text-foreground text-base leading-snug mb-2 line-clamp-2">{ev.title}</h3>
-                      <div className="space-y-1 text-xs text-muted-foreground mt-auto">
-                        {ev.date && (
-                          <div className="flex items-center gap-1.5">
-                            <Calendar size={11} /> {formatDate(ev.date)}
-                          </div>
-                        )}
-                        {ev.time && (
-                          <div className="flex items-center gap-1.5">
-                            <Clock size={11} /> {ev.time}
-                          </div>
-                        )}
-                        {ev.location && (
-                          <div className="flex items-center gap-1.5">
-                            <MapPin size={11} /> {ev.location}
-                          </div>
-                        )}
-                      </div>
+                    <div className="glass-card rounded-2xl overflow-hidden flex flex-col h-full relative">
+                      {loadingId === ev._id && (
+                        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                          <Loader2 className="w-10 h-10 text-sky-400 animate-spin" />
+                        </div>
+                      )}
+                      {imgs[0] ? (
+                        <div className="relative h-40 w-full overflow-hidden shrink-0">
+                          <Image
+                            src={imgs[0]}
+                            alt={ev.title}
+                            fill
+                            sizes="(max-width:768px) 100vw, 33vw"
+                            className="object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                        </div>
+                      ) : (
+                        <div className="h-40 flex items-center justify-center shrink-0" style={{ background: "linear-gradient(135deg,#38bdf820,#6366f120)" }}>
+                          <Calendar size={36} className="text-sky-400 opacity-60" />
+                        </div>
+                      )}
+                      <div className="p-5 flex flex-col flex-1">
+                        <h3 className="font-bold text-foreground text-base leading-snug mb-2 line-clamp-2">{ev.title}</h3>
+                        <div className="space-y-1 text-xs text-muted-foreground mt-auto">
+                          {ev.date && (
+                            <div className="flex items-center gap-1.5">
+                              <Calendar size={11} /> {formatDate(ev.date)}
+                            </div>
+                          )}
+                          {ev.time && (
+                            <div className="flex items-center gap-1.5">
+                              <Clock size={11} /> {ev.time}
+                            </div>
+                          )}
+                          {ev.location && (
+                            <div className="flex items-center gap-1.5">
+                              <MapPin size={11} /> {ev.location}
+                            </div>
+                          )}
+                        </div>
 
-                      <div className="mt-4 pt-4 border-t border-white/5 flex items-center justify-between">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest bg-sky-500/10 text-sky-400 border border-sky-500/20 group-hover:bg-sky-500/20 transition-colors">
-                          Register Now
-                        </span>
-                        <ArrowRight size={14} className="text-sky-400 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" />
+                        <div className="mt-4 pt-4 border-t border-white/5 flex items-center justify-between">
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest bg-sky-500/10 text-sky-400 border border-sky-500/20 group-hover:bg-sky-500/20 transition-colors">
+                            Register Now
+                          </span>
+                          <ArrowRight size={14} className="text-sky-400 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" />
+                        </div>
                       </div>
                     </div>
                   </ElectricBorder>

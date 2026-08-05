@@ -331,7 +331,7 @@ const ElectricBorder: React.FC<ElectricBorderProps> = ({
           }}
         />
       </div>
-      <div className="relative rounded-[inherit] z-[1]">{children}</div>
+      <div className="relative rounded-[inherit] z-[1] h-full w-full">{children}</div>
     </div>
   );
 };

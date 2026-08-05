@@ -38,7 +38,7 @@ const DEFAULT_DEPARTMENTS = [
   "Marketing",
   "Documentation",
   "Logistics",
-  "Design Department",
+  "Design",
 ] as const
 
 export default function MembersAdminPage() {

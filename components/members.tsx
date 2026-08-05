@@ -5,6 +5,7 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Users, UserX } from "lucide-react";
 import { useCachedMembersByDept } from "@/lib/data-cache";
+import OptionWheel from "./OptionWheel";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -12,14 +13,13 @@ type Member = { _id: string; name: string; role: string; department: string; ima
 type Department = { name: string; lead: Member | null; coHead: Member | null; members: Member[]; color: string };
 
 export function Members() {
-  // membersByDept is populated per-department by the cache's Phase 2 fetches
   const membersByDept = useCachedMembersByDept();
-  // Flatten for backward compat with the rest of the component logic
   const cachedMembers = membersByDept ? Object.values(membersByDept).flat() : null;
   const [members, setMembers] = useState<Member[]>(cachedMembers ?? []);
   const [loading, setLoading] = useState(cachedMembers === null);
-  const [error, setError] = useState(false);
+  const [selectedDeptIndex, setSelectedDeptIndex] = useState(0);
   const sectionRef = useRef<HTMLElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (cachedMembers !== null) {
@@ -29,6 +29,7 @@ export function Members() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [membersByDept]);
 
+  // Animate heading on scroll
   useEffect(() => {
     if (!members.length) return;
     const ctx = gsap.context(() => {
@@ -36,15 +37,18 @@ export function Members() {
         opacity: 1, y: 0, duration: 0.8, ease: "power3.out",
         scrollTrigger: { trigger: ".members-heading", start: "top 80%" },
       });
-      gsap.fromTo(".member-card", { opacity: 0, y: 40 }, {
-        opacity: 1, y: 0, duration: 0.6, stagger: 0.08, ease: "power3.out",
-        scrollTrigger: { trigger: sectionRef.current, start: "top 60%" },
-      });
     }, sectionRef);
     return () => ctx.revert();
   }, [members]);
 
-  if (error) return <p className="text-center mt-10">Failed to load members.</p>;
+  // Animate panel when department changes
+  useEffect(() => {
+    if (!panelRef.current) return;
+    gsap.fromTo(panelRef.current,
+      { opacity: 0, y: 18 },
+      { opacity: 1, y: 0, duration: 0.38, ease: "power2.out" }
+    );
+  }, [selectedDeptIndex]);
 
   if (loading) return (
     <section className="py-20 px-4">
@@ -98,7 +102,8 @@ export function Members() {
     if (n.includes("tech"))    return "blue";
     if (n.includes("market"))  return "purple";
     if (n.includes("doc"))     return "emerald";
-    if (n.includes("event"))   return "indigo";
+    if (n.includes("event") || n.includes("logistic")) return "indigo";
+    if (n.includes("design")) return "rose";
     return "orange";
   };
 
@@ -117,14 +122,14 @@ export function Members() {
       return acc;
     }, {} as Record<string, { name: string; lead: Member | null; coHead: Member | null; members: Member[] }>);
 
-  // Maps each actual dept name to its fixed-order rank (case-insensitive substring match)
   const deptRank = (name: string): number => {
     const n = name.toLowerCase();
-    if (n.includes("tech"))          return 0;
-    if (n.includes("market"))        return 1;
-    if (n.includes("doc"))           return 2;
-    if (n.includes("event"))         return 3;
-    return 99; // unknown → end
+    if (n.includes("tech"))    return 0;
+    if (n.includes("market"))  return 1;
+    if (n.includes("doc"))     return 2;
+    if (n.includes("event") || n.includes("logistic")) return 3;
+    if (n.includes("design")) return 4;
+    return 99;
   };
 
   const departments: Department[] = Object.values(groupedDepartments)
@@ -132,36 +137,41 @@ export function Members() {
       const diff = deptRank(a.name) - deptRank(b.name);
       return diff !== 0 ? diff : a.name.localeCompare(b.name);
     })
-    .map((dept) => ({
-      ...dept,
-      color: deptColor(dept.name),
-    }));
+    .map((dept) => ({ ...dept, color: deptColor(dept.name) }));
 
   const getColorClasses = (color: string) => {
-    const colors: Record<string, { stripe: string; badge: string; accent: string; border: string }> = {
-      blue: { stripe: "from-blue-500/80 to-cyan-500/80", badge: "bg-blue-500/10 text-blue-600 dark:text-blue-300", accent: "text-blue-600 dark:text-blue-300", border: "border-blue-500/20" },
-      emerald: { stripe: "from-emerald-500/80 to-teal-500/80", badge: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-300", accent: "text-emerald-600 dark:text-emerald-300", border: "border-emerald-500/20" },
-      indigo: { stripe: "from-indigo-500/80 to-sky-500/80", badge: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-300", accent: "text-indigo-600 dark:text-indigo-300", border: "border-indigo-500/20" },
-      purple: { stripe: "from-fuchsia-500/80 to-purple-500/80", badge: "bg-purple-500/10 text-purple-600 dark:text-purple-300", accent: "text-purple-600 dark:text-purple-300", border: "border-purple-500/20" },
-      orange: { stripe: "from-orange-500/80 to-amber-500/80", badge: "bg-orange-500/10 text-orange-600 dark:text-orange-300", accent: "text-orange-600 dark:text-orange-300", border: "border-orange-500/20" },
+    const colors: Record<string, { stripe: string; badge: string; accent: string; border: string; glow: string }> = {
+      blue:    { stripe: "from-blue-500/80 to-cyan-500/80",       badge: "bg-blue-500/10 text-blue-600 dark:text-blue-300",         accent: "text-blue-600 dark:text-blue-300",       border: "border-blue-500/20",    glow: "#38bdf8" },
+      emerald: { stripe: "from-emerald-500/80 to-teal-500/80",    badge: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-300", accent: "text-emerald-600 dark:text-emerald-300", border: "border-emerald-500/20", glow: "#34d399" },
+      indigo:  { stripe: "from-indigo-500/80 to-sky-500/80",      badge: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-300",   accent: "text-indigo-600 dark:text-indigo-300",   border: "border-indigo-500/20",  glow: "#818cf8" },
+      purple:  { stripe: "from-fuchsia-500/80 to-purple-500/80",  badge: "bg-purple-500/10 text-purple-600 dark:text-purple-300",   accent: "text-purple-600 dark:text-purple-300",   border: "border-purple-500/20",  glow: "#c084fc" },
+      orange:  { stripe: "from-orange-500/80 to-amber-500/80",    badge: "bg-orange-500/10 text-orange-600 dark:text-orange-300",   accent: "text-orange-600 dark:text-orange-300",   border: "border-orange-500/20",  glow: "#fb923c" },
+      rose:    { stripe: "from-rose-500/80 to-pink-500/80",       badge: "bg-rose-500/10 text-rose-600 dark:text-rose-300",         accent: "text-rose-600 dark:text-rose-300",       border: "border-rose-500/20",    glow: "#fb7185" },
     };
     return colors[color] || colors.blue;
   };
 
+  const dept = departments[Math.min(selectedDeptIndex, departments.length - 1)];
+  const cc = dept ? getColorClasses(dept.color) : getColorClasses("blue");
+  const wheelItems = departments.map((d) => d.name);
+
   return (
     <section id="members" ref={sectionRef} className="py-20 px-4">
       <div className="max-w-7xl mx-auto">
+
+        {/* Heading */}
         <div className="members-heading text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold mb-6 text-foreground">Meet Our <span className="gradient-text">Team</span></h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto text-pretty">Passionate individuals driving innovation and fostering a collaborative learning environment</p>
         </div>
 
-        {/* Executive Team */}
+        {/* ── Executive Team ───────────────────────────────────────── */}
         <div className="mb-20">
           <h3 className="text-3xl font-bold text-center mb-12 gradient-text">Executive Leadership</h3>
+
           {president && (
             <div className="max-w-5xl mx-auto mb-8">
-              <div className="member-card glass-card rounded-2xl p-4 sm:p-6 w-full min-h-[260px] sm:min-h-[320px] max-w-[520px] sm:max-w-none mx-auto hover:-translate-y-1.5 transition-transform duration-300">
+              <div className="glass-card rounded-2xl p-4 sm:p-6 w-full min-h-[260px] sm:min-h-[320px] max-w-[520px] sm:max-w-none mx-auto hover:-translate-y-1.5 transition-transform duration-300">
                 <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] gap-6 items-center h-full">
                   <img src={president.image || "/placeholder.svg"} loading="lazy" alt={president.name} className="w-[160px] h-[160px] sm:w-full sm:h-auto md:w-[240px] aspect-square rounded-xl object-cover mx-auto" />
                   <div>
@@ -174,9 +184,10 @@ export function Members() {
               </div>
             </div>
           )}
+
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-3 max-w-4xl mx-auto">
             {executiveMembers.map((member) => (
-              <div key={member._id} className="member-card glass-card rounded-2xl p-3 sm:p-3.5 h-full w-full hover:-translate-y-1.5 transition-transform duration-300">
+              <div key={member._id} className="glass-card rounded-2xl p-3 sm:p-3.5 h-full w-full hover:-translate-y-1.5 transition-transform duration-300">
                 <img src={member.image || "/placeholder.svg"} loading="lazy" alt={member.name} className="w-[130px] h-[130px] sm:w-[170px] sm:h-[170px] rounded-xl object-cover mb-3 mx-auto" />
                 <div className="flex justify-center mb-2.5">
                   <div className="inline-flex text-center items-center rounded-full px-3 py-1 text-xs font-semibold bg-blue-500/10 text-blue-600 dark:text-blue-300">Executive Member</div>
@@ -188,79 +199,151 @@ export function Members() {
           </div>
         </div>
 
-        {/* Departments */}
-        <div className="space-y-16 max-w-6xl mx-auto">
-          {departments.map((dept) => (
-            <div key={dept.name} className="member-card relative">
-              <div className={`glass-card rounded-3xl border overflow-hidden ${getColorClasses(dept.color).border}`}>
-                <div className={`h-1 w-full bg-gradient-to-r ${getColorClasses(dept.color).stripe}`} />
-                <div className="p-5 md:p-7">
-                  {/* Header row */}
-                  <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <h3 className="text-2xl font-bold text-foreground">{dept.name}</h3>
-                    <div className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-medium ${getColorClasses(dept.color).badge}`}>
-                      <Users className="h-4 w-4" />
-                      <span>{dept.members.length + (dept.lead ? 1 : 0) + (dept.coHead ? 1 : 0)} Members</span>
+        {/* ── Departments: fixed wheel + panel ─────────────────────── */}
+        {departments.length > 0 && (
+          <div>
+            <h3 className="text-3xl font-bold text-center mb-10 gradient-text">Departments</h3>
+
+            {/* Fixed left wheel — only on lg+ screens */}
+            <div
+              className="hidden lg:block fixed left-0 top-0 z-40 pointer-events-auto"
+              style={{ width: 220, height: '100vh' }}
+            >
+              {/* Subtle centre-line indicator */}
+              <div
+                className="pointer-events-none absolute inset-x-3 top-1/2 -translate-y-1/2 h-[1.5px] rounded-full opacity-25 transition-all duration-500"
+                style={{ background: cc.glow }}
+              />
+              <div
+                className="pointer-events-none absolute inset-x-3 top-1/2 -translate-y-1/2 h-12 rounded-xl transition-all duration-500"
+                style={{ background: `${cc.glow}12` }}
+              />
+
+              <OptionWheel
+                items={wheelItems}
+                defaultSelected={0}
+                onChange={(idx) => setSelectedDeptIndex(idx)}
+                textColor="rgba(255,255,255,0.65)"
+                activeColor="#ffffff"
+                side="left"
+                fontSize={1.5}
+                spacing={2.4}
+                curve={0.5}
+                tilt={5}
+                blur={1.2}
+                fade={0.32}
+                minOpacity={0.18}
+                smoothing={180}
+                inset={18}
+              />
+            </div>
+
+            {/* Mobile: wheel inline at top */}
+            <div
+              className="lg:hidden relative mb-8"
+              style={{ height: Math.min(departments.length * 56 + 60, 300) }}
+            >
+              <div
+                className="pointer-events-none absolute inset-x-2 top-1/2 -translate-y-1/2 h-[1.5px] rounded-full opacity-20 transition-all duration-500"
+                style={{ background: cc.glow }}
+              />
+              <OptionWheel
+                items={wheelItems}
+                defaultSelected={0}
+                onChange={(idx) => setSelectedDeptIndex(idx)}
+                textColor="rgba(255,255,255,0.65)"
+                activeColor="#ffffff"
+                side="left"
+                fontSize={1.25}
+                spacing={2.0}
+                curve={0.5}
+                tilt={5}
+                blur={1.2}
+                fade={0.32}
+                minOpacity={0.18}
+                smoothing={180}
+                inset={16}
+              />
+            </div>
+
+            {/* Members panel — pushed right on desktop to clear fixed wheel */}
+            <div ref={panelRef} className="lg:pl-56 lg:pr-56">
+              {dept && (
+                <div className={`glass-card rounded-3xl border overflow-hidden ${cc.border}`}>
+                  <div className={`h-1 w-full bg-gradient-to-r ${cc.stripe}`} />
+                    <div className="p-5 md:p-7">
+
+                      {/* Header */}
+                      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <h3 className="text-2xl font-bold text-foreground">{dept.name}</h3>
+                        <div className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-medium ${cc.badge}`}>
+                          <Users className="h-4 w-4" />
+                          <span>{dept.members.length + (dept.lead ? 1 : 0) + (dept.coHead ? 1 : 0)} Members</span>
+                        </div>
+                      </div>
+
+                      {/* Head */}
+                      {dept.lead && (
+                        <div className="mb-4">
+                          <div className={`glass-card rounded-2xl p-4 sm:p-5 border ${cc.border} max-w-[380px] sm:max-w-none mx-auto hover:-translate-y-1 transition-transform duration-300`}>
+                            <div className="grid grid-cols-1 sm:grid-cols-[170px_1fr] gap-4 items-center">
+                              <img src={dept.lead.image || "/placeholder.svg"} loading="lazy" alt={dept.lead.name} className="w-[130px] h-[130px] sm:w-[170px] sm:h-[170px] aspect-square rounded-xl object-cover mx-auto" />
+                              <div className="min-w-0">
+                                <p className={`inline-flex rounded-full px-3 py-1 text-xs uppercase tracking-wider font-semibold mb-3 ${cc.badge}`}>Head</p>
+                                <h4 className="text-xl font-semibold text-foreground truncate">{dept.lead.name}</h4>
+                                <p className="text-sm text-muted-foreground truncate mb-3">{dept.lead.role}</p>
+                                <p className="text-sm text-foreground/85">Leading {dept.name} with focus on execution, mentoring, and quality outcomes.</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Co-Head */}
+                      {dept.coHead && (
+                        <div className="mb-5">
+                          <div className="glass-card rounded-2xl p-3 sm:p-4 border border-white/10 max-w-[340px] sm:max-w-none mx-auto hover:-translate-y-1 transition-transform duration-300">
+                            <div className="grid grid-cols-1 sm:grid-cols-[140px_1fr] gap-4 items-center">
+                              <img src={dept.coHead.image || "/placeholder.svg"} loading="lazy" alt={dept.coHead.name} className="w-[110px] h-[110px] sm:w-[140px] sm:h-[140px] aspect-square rounded-xl object-cover mx-auto" />
+                              <div className="min-w-0">
+                                <p className={`inline-flex rounded-full px-3 py-1 text-xs uppercase tracking-wider font-semibold mb-2 ${cc.badge} opacity-80`}>Co-Head</p>
+                                <h4 className="text-lg font-semibold text-foreground truncate">{dept.coHead.name}</h4>
+                                <p className="text-sm text-muted-foreground truncate">{dept.coHead.role}</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Regular members grid */}
+                      {dept.members.length > 0 ? (
+                        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 justify-items-center">
+                          {dept.members.map((member) => (
+                            <div key={member._id} className="glass-card rounded-2xl p-2.5 sm:p-3 border border-white/10 h-full w-full hover:-translate-y-1 transition-transform duration-300">
+                              <div className="mb-3 flex justify-center">
+                                <img src={member.image || "/placeholder.svg"} loading="lazy" alt={member.name} className="w-[120px] h-[120px] sm:w-[170px] sm:h-[170px] rounded-xl object-cover" />
+                              </div>
+                              <h5 className="text-sm font-semibold text-foreground truncate mb-1 text-center">{member.name}</h5>
+                              <p className="text-xs text-muted-foreground truncate text-center">{member.role}</p>
+                              <p className={`text-xs mt-3 text-center ${cc.accent}`}>{dept.name}</p>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        !dept.lead && !dept.coHead && (
+                          <div className="rounded-2xl border border-dashed border-white/20 p-5 text-sm text-muted-foreground text-center">
+                            No additional team members listed yet.
+                          </div>
+                        )
+                      )}
+
                     </div>
                   </div>
-
-                  {/* Head — full-width prominent card */}
-                  {dept.lead && (
-                    <div className="mb-4">
-                      <div className={`glass-card rounded-2xl p-4 sm:p-5 border ${getColorClasses(dept.color).border} max-w-[380px] sm:max-w-none mx-auto hover:-translate-y-1 transition-transform duration-300`}>
-                        <div className="grid grid-cols-1 sm:grid-cols-[170px_1fr] gap-4 items-center">
-                          <img src={dept.lead.image || "/placeholder.svg"} loading="lazy" alt={dept.lead.name} className="w-[130px] h-[130px] sm:w-[170px] sm:h-[170px] aspect-square rounded-xl object-cover mx-auto" />
-                          <div className="min-w-0">
-                            <p className={`inline-flex rounded-full px-3 py-1 text-xs uppercase tracking-wider font-semibold mb-3 ${getColorClasses(dept.color).badge}`}>Head</p>
-                            <h4 className="text-xl font-semibold text-foreground truncate">{dept.lead.name}</h4>
-                            <p className="text-sm text-muted-foreground truncate mb-3">{dept.lead.role}</p>
-                            <p className="text-sm text-foreground/85">Leading {dept.name} with focus on execution, mentoring, and quality outcomes.</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Co-Head — slightly smaller but still a feature card */}
-                  {dept.coHead && (
-                    <div className="mb-5">
-                      <div className={`glass-card rounded-2xl p-3 sm:p-4 border border-white/10 max-w-[340px] sm:max-w-none mx-auto hover:-translate-y-1 transition-transform duration-300`}>
-                        <div className="grid grid-cols-1 sm:grid-cols-[140px_1fr] gap-4 items-center">
-                          <img src={dept.coHead.image || "/placeholder.svg"} loading="lazy" alt={dept.coHead.name} className="w-[110px] h-[110px] sm:w-[140px] sm:h-[140px] aspect-square rounded-xl object-cover mx-auto" />
-                          <div className="min-w-0">
-                            <p className={`inline-flex rounded-full px-3 py-1 text-xs uppercase tracking-wider font-semibold mb-2 ${getColorClasses(dept.color).badge} opacity-80`}>Co-Head</p>
-                            <h4 className="text-lg font-semibold text-foreground truncate">{dept.coHead.name}</h4>
-                            <p className="text-sm text-muted-foreground truncate">{dept.coHead.role}</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Regular members grid */}
-                  {dept.members.length > 0 ? (
-                    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 justify-items-center">
-                      {dept.members.map((member) => (
-                        <div key={member._id} className="glass-card rounded-2xl p-2.5 sm:p-3 border border-white/10 h-full w-full hover:-translate-y-1 transition-transform duration-300">
-                          <div className="mb-3 flex justify-center">
-                            <img src={member.image || "/placeholder.svg"} loading="lazy" alt={member.name} className="w-[120px] h-[120px] sm:w-[170px] sm:h-[170px] rounded-xl object-cover" />
-                          </div>
-                          <h5 className="text-sm font-semibold text-foreground truncate mb-1 text-center">{member.name}</h5>
-                          <p className="text-xs text-muted-foreground truncate text-center">{member.role}</p>
-                          <p className={`text-xs mt-3 text-center ${getColorClasses(dept.color).accent}`}>{dept.name}</p>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    !dept.lead && !dept.coHead && (
-                      <div className="rounded-2xl border border-dashed border-white/20 p-5 text-sm text-muted-foreground text-center">No additional team members listed yet.</div>
-                    )
-                  )}
-                </div>
+                )}
               </div>
-            </div>
-          ))}
-        </div>
+          </div>
+        )}
+
       </div>
     </section>
   );

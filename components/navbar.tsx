@@ -99,17 +99,18 @@ export function Navbar() {
   const isActive = (href: string) => pathname === href
 
   return (
-    <nav
-      ref={navRef}
-      className={`fixed top-3 z-50 transition-all duration-500 ${
-        scrolled
-          ? "left-4 right-4 md:left-16 md:right-16"
-          : "left-4 right-4 md:left-10 md:right-10"
+    <div
+      className={`fixed top-3 inset-x-0 z-50 flex justify-center transition-all duration-500 pointer-events-none ${
+        scrolled ? "px-4 lg:px-16" : "px-4 lg:px-10"
       }`}
     >
+      <nav
+        ref={navRef}
+        className="w-full max-w-7xl pointer-events-auto"
+      >
       {/* ── Glass pill ─────────────────────────────────────────────────── */}
       <div
-        className="rounded-2xl px-4 py-3 md:px-6"
+        className="rounded-2xl px-4 py-3 lg:px-6"
         style={{
           background: glassBg,
           backdropFilter: "blur(20px)",
@@ -149,7 +150,7 @@ export function Navbar() {
           </Link>
 
           {/* ── Desktop nav links ──────────────────────────────────────── */}
-          <div className="hidden md:flex items-center gap-1">
+          <div className="hidden lg:flex items-center gap-1">
             {navItems.map((item) => (
               <Link
                 key={item.name}
@@ -185,7 +186,7 @@ export function Navbar() {
           </div>
 
           {/* ── Desktop right actions ──────────────────────────────────── */}
-          <div className="hidden md:flex items-center gap-2">
+          <div className="hidden lg:flex items-center gap-2">
             {/* Theme toggle */}
             <button
               onClick={toggleTheme}
@@ -280,7 +281,7 @@ export function Navbar() {
           </div>
 
           {/* ── Mobile: theme toggle + hamburger ─────────────────────── */}
-          <div className="flex md:hidden items-center gap-2">
+          <div className="flex lg:hidden items-center gap-2">
             <button
               onClick={toggleTheme}
               className="p-2 rounded-lg border transition-colors duration-200"
@@ -420,7 +421,8 @@ export function Navbar() {
           </div>
         </div>
       </div>
-    </nav>
+      </nav>
+    </div>
   )
 }
 
