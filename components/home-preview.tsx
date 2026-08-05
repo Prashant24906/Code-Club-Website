@@ -8,6 +8,7 @@ import Link from "next/link"
 import {
   Calendar, MapPin, Clock, Users, ArrowRight, MessageCircle,
   Code2, Cpu, Globe, Zap, Shield, BookOpen, Rocket, Layers, Trophy,
+  Loader2,
   type LucideIcon,
 } from "lucide-react"
 import { useCachedEvents, useCachedCommunities, useCachedMembersLeadership } from "@/lib/data-cache"
@@ -40,6 +41,7 @@ function EventsPreview() {
     cachedEvents.upcoming?.events ?? []
   )
   const [loading, setLoading] = useState(!cachedEvents.upcoming)
+  const [loadingId, setLoadingId] = useState<string | null>(null)
 
   // Read directly from the cache — DataCacheProvider fetches this on mount
   useEffect(() => {
@@ -146,10 +148,17 @@ function EventsPreview() {
             {events.map((ev) => {
               const imgs = ev.images?.length ? ev.images : ev.image ? [ev.image] : []
               return (
-                <div
+                <Link
+                  href={`/events/${ev._id}`}
                   key={ev._id}
-                  className="ep-card glass-card rounded-2xl overflow-hidden flex flex-col group hover:-translate-y-2 transition-transform duration-300"
+                  onClick={() => setLoadingId(ev._id)}
+                  className="ep-card glass-card rounded-2xl overflow-hidden flex flex-col group hover:-translate-y-2 transition-transform duration-300 relative"
                 >
+                  {loadingId === ev._id && (
+                    <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                      <Loader2 className="w-10 h-10 text-sky-400 animate-spin" />
+                    </div>
+                  )}
                   {imgs[0] ? (
                     <div className="relative h-40 w-full overflow-hidden">
                       <Image
@@ -185,8 +194,15 @@ function EventsPreview() {
                         </div>
                       )}
                     </div>
+
+                    <div className="mt-4 pt-4 border-t border-white/5 flex items-center justify-between">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest bg-sky-500/10 text-sky-400 border border-sky-500/20 group-hover:bg-sky-500/20 transition-colors">
+                        Register Now
+                      </span>
+                      <ArrowRight size={14} className="text-sky-400 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" />
+                    </div>
                   </div>
-                </div>
+                </Link>
               )
             })}
           </div>
