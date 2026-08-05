@@ -46,6 +46,9 @@ export default async function EventPage({ params }: Props) {
     minTeamSize: raw.minTeamSize ?? null,
     maxTeamSize: raw.maxTeamSize ?? null,
     teamNameLabel: raw.teamNameLabel ?? "",
+    prizePool: Array.isArray(raw.prizePool) 
+      ? raw.prizePool.map((p: any) => ({ position: String(p.position || ""), amount: String(p.amount || "") })) 
+      : [],
   };
 
   return (

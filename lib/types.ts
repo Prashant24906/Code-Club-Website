@@ -11,6 +11,7 @@ export interface EventType {
   minTeamSize?: number;
   maxTeamSize?: number;
   teamNameLabel?: string;
+  prizePool?: { position: string, amount: string }[];
 }
 
 // Member Interface

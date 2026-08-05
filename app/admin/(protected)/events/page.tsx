@@ -38,6 +38,7 @@ export default function EventsAdminPage() {
   const [aMinTeam, setAMinTeam] = useState("")
   const [aMaxTeam, setAMaxTeam] = useState("")
   const [aTeamLabel, setATeamLabel] = useState("")
+  const [aPrizePool, setAPrizePool] = useState<{position: string, amount: string}[]>([])
 
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editOpen, setEditOpen] = useState(false)
@@ -51,6 +52,7 @@ export default function EventsAdminPage() {
   const [eMinTeam, setEMinTeam] = useState("")
   const [eMaxTeam, setEMaxTeam] = useState("")
   const [eTeamLabel, setETeamLabel] = useState("")
+  const [ePrizePool, setEPrizePool] = useState<{position: string, amount: string}[]>([])
 
   const [addCropOpen, setAddCropOpen] = useState(false)
   const [addCropSrc, setAddCropSrc] = useState<string | null>(null)
@@ -99,6 +101,7 @@ export default function EventsAdminPage() {
       minTeamSize: aMinTeam ? Number(aMinTeam) : undefined,
       maxTeamSize: aMaxTeam ? Number(aMaxTeam) : undefined,
       teamNameLabel: aTeamLabel.trim() || undefined,
+      prizePool: aPrizePool.filter(p => p.position.trim() && p.amount.trim()),
     }
 
     try {
@@ -129,6 +132,7 @@ export default function EventsAdminPage() {
       minTeamSize: eMinTeam ? Number(eMinTeam) : undefined,
       maxTeamSize: eMaxTeam ? Number(eMaxTeam) : undefined,
       teamNameLabel: eTeamLabel.trim() || undefined,
+      prizePool: ePrizePool.filter(p => p.position.trim() && p.amount.trim()),
     }
 
     try {
@@ -182,6 +186,7 @@ export default function EventsAdminPage() {
     setAMinTeam("")
     setAMaxTeam("")
     setATeamLabel("")
+    setAPrizePool([])
   }
   function resetEditForm() {
     setEditingId(null)
@@ -195,6 +200,7 @@ export default function EventsAdminPage() {
     setEMinTeam("")
     setEMaxTeam("")
     setETeamLabel("")
+    setEPrizePool([])
   }
 
   const onAddDrop = (files: File[]) => {
@@ -290,6 +296,7 @@ export default function EventsAdminPage() {
     setEMinTeam(event.minTeamSize != null ? String(event.minTeamSize) : "")
     setEMaxTeam(event.maxTeamSize != null ? String(event.maxTeamSize) : "")
     setETeamLabel(event.teamNameLabel || "")
+    setEPrizePool(event.prizePool || [])
     
     // Support legacy data structure
     if (event.images && event.images.length > 0) {
@@ -542,6 +549,49 @@ export default function EventsAdminPage() {
             <p className="text-xs text-muted-foreground">Min members · Max members · Label shown to registrants</p>
           </div>
 
+          {/* Prize Pool */}
+          <div className="grid gap-2 sm:col-span-2">
+            <label className="text-sm font-medium flex items-center justify-between">
+              <span className="flex items-center gap-2">🏆 Prize Pool (optional)</span>
+              <Button type="button" size="sm" variant="outline" onClick={() => setAPrizePool([...aPrizePool, {position: "", amount: ""}])}>
+                + Add Position
+              </Button>
+            </label>
+            {aPrizePool.length > 0 ? (
+              <div className="space-y-2">
+                {aPrizePool.map((prize, idx) => (
+                  <div key={idx} className="flex gap-2 items-center">
+                    <input 
+                      placeholder="Position (e.g. 1st)"
+                      className="glass rounded-md px-3 py-2 flex-1"
+                      value={prize.position}
+                      onChange={e => {
+                        const newPool = [...aPrizePool]
+                        newPool[idx].position = e.target.value
+                        setAPrizePool(newPool)
+                      }}
+                    />
+                    <input 
+                      placeholder="Prize (e.g. ₹5,000)"
+                      className="glass rounded-md px-3 py-2 flex-1"
+                      value={prize.amount}
+                      onChange={e => {
+                        const newPool = [...aPrizePool]
+                        newPool[idx].amount = e.target.value
+                        setAPrizePool(newPool)
+                      }}
+                    />
+                    <Button type="button" variant="destructive" size="icon" onClick={() => setAPrizePool(aPrizePool.filter((_, i) => i !== idx))}>
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+               <p className="text-xs text-muted-foreground">No prize pool added.</p>
+            )}
+          </div>
+
           <div className="flex gap-2 sm:col-span-2">
             <Button onClick={addEvent} disabled={!addCanSave} className="bg-emerald-600 hover:bg-emerald-700">
               Submit
@@ -754,6 +804,49 @@ export default function EventsAdminPage() {
                 <input type="text" value={eTeamLabel} onChange={e => setETeamLabel(e.target.value)} placeholder="Label (e.g. Team Name)" className="glass rounded-md px-3 py-2" />
               </div>
               <p className="text-xs text-muted-foreground">Min members · Max members · Label shown to registrants</p>
+            </div>
+
+            {/* Prize Pool */}
+            <div className="grid gap-2">
+              <label className="text-sm font-medium flex items-center justify-between">
+                <span className="flex items-center gap-2">🏆 Prize Pool (optional)</span>
+                <Button type="button" size="sm" variant="outline" onClick={() => setEPrizePool([...ePrizePool, {position: "", amount: ""}])}>
+                  + Add Position
+                </Button>
+              </label>
+              {ePrizePool.length > 0 ? (
+                <div className="space-y-2">
+                  {ePrizePool.map((prize, idx) => (
+                    <div key={idx} className="flex gap-2 items-center">
+                      <input 
+                        placeholder="Position (e.g. 1st)"
+                        className="glass rounded-md px-3 py-2 flex-1"
+                        value={prize.position}
+                        onChange={e => {
+                          const newPool = [...ePrizePool]
+                          newPool[idx].position = e.target.value
+                          setEPrizePool(newPool)
+                        }}
+                      />
+                      <input 
+                        placeholder="Prize (e.g. ₹5,000)"
+                        className="glass rounded-md px-3 py-2 flex-1"
+                        value={prize.amount}
+                        onChange={e => {
+                          const newPool = [...ePrizePool]
+                          newPool[idx].amount = e.target.value
+                          setEPrizePool(newPool)
+                        }}
+                      />
+                      <Button type="button" variant="destructive" size="icon" onClick={() => setEPrizePool(ePrizePool.filter((_, i) => i !== idx))}>
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                 <p className="text-xs text-muted-foreground">No prize pool added.</p>
+              )}
             </div>
           </div>
 

@@ -14,6 +14,10 @@ const eventSchema = new mongoose.Schema(
     minTeamSize: { type: Number, default: null },
     maxTeamSize: { type: Number, default: null },
     teamNameLabel: { type: String, default: "" }, // e.g. "Team Name"
+    prizePool: { 
+      type: [{ position: String, amount: String }],
+      default: []
+    },
   },
   { timestamps: true }
 );

@@ -32,7 +32,7 @@ export async function GET(
   return NextResponse.json({ registered: !!existing });
 }
 
-// ── POST — register (no login required) ──────────────────────────────────────
+// ── POST — register (login required) ────────────────────────────────────────
 
 export async function POST(
   req: NextRequest,
@@ -94,19 +94,21 @@ export async function POST(
     }
   }
 
-  // Attach userId if logged in (enables duplicate prevention for members)
+  // Require a logged-in user
   const userId = tryGetUserId(req);
+  if (!userId) {
+    return NextResponse.json({ error: "You must be signed in to register for this event." }, { status: 401 });
+  }
 
-  if (userId) {
-    const existing = await Registration.findOne({ eventId, userId });
-    if (existing) {
-      return NextResponse.json({ error: "You are already registered for this event." }, { status: 409 });
-    }
+  // Prevent duplicate registration
+  const existing = await Registration.findOne({ eventId, userId });
+  if (existing) {
+    return NextResponse.json({ error: "You are already registered for this event." }, { status: 409 });
   }
 
   const registration = await Registration.create({
     eventId,
-    userId: userId ?? null,
+    userId,
     name, email, phone, year, department, division,
     teamName,
     teammates,

@@ -94,7 +94,7 @@ export function AuthModal({ open, onOpenChange, onSuccess, reason }: AuthModalPr
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
+              placeholder="Email"
               required
               className="w-full px-4 py-2.5 rounded-xl text-sm text-white placeholder:text-slate-600 outline-none transition-all duration-200 focus:ring-2"
               style={{
