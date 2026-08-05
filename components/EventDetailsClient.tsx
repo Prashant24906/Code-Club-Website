@@ -188,6 +188,19 @@ function RegistrationModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!form.name.trim() || !form.email.trim()) { setError("Name and email are required."); return }
+    if (isTeamEvent) {
+      if (teammates.length < minTeammates) {
+        setError(`Please add at least ${minTeammates} teammate${minTeammates > 1 ? "s" : ""}.`); return
+      }
+      if (!teamName.trim()) {
+        setError(`${teamNameLabel || "Team Name"} is required.`); return
+      }
+      for (let i = 0; i < teammates.length; i++) {
+        if (!teammates[i].name.trim() || !teammates[i].email.trim()) {
+          setError(`Teammate ${i + 1}'s name and email are required.`); return
+        }
+      }
+    }
     setLoading(true); setError("")
     try {
       const res = await fetch(`/api/events/${eventId}/register`, {
@@ -278,7 +291,7 @@ function RegistrationModal({
 
                 {/* Team name */}
                 <div>
-                  <label className={labelCls}>{teamNameLabel || "Team Name"}</label>
+                  <label className={labelCls}>{teamNameLabel || "Team Name"} *</label>
                   <input type="text" value={teamName} onChange={e => setTeamName(e.target.value)} placeholder="Enter team name" className={inputCls} />
                 </div>
 
@@ -300,7 +313,7 @@ function RegistrationModal({
                         <input type="text" value={tm.name} onChange={e => setTM(i, "name", e.target.value)} placeholder="Teammate name" className={inputCls} />
                       </div>
                       <div>
-                        <label className={labelCls}>Email</label>
+                        <label className={labelCls}>Email *</label>
                         <input type="email" value={tm.email} onChange={e => setTM(i, "email", e.target.value)} placeholder="email" className={inputCls} />
                       </div>
                       <div>
