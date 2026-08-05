@@ -128,7 +128,7 @@ const YEAR_OPTIONS = ["FY", "SY", "TY", "BE", "Passout", "Other"]
 const DEPT_OPTIONS = ["IT", "CS", "MECH", "CIVIL", "EXTC", "ETRX", "AIDS", "AIML", "OTHER"]
 const DIV_OPTIONS  = ["A", "B", "C", "D"]
 
-type Teammate = { name: string; email: string; phone: string }
+type Teammate = { name: string; email: string; phone: string; year: string; department: string; division: string }
 
 interface RegModalProps {
   eventId: string
@@ -157,7 +157,7 @@ function RegistrationModal({
   })
   const [teamName, setTeamName]   = useState("")
   const [teammates, setTeammates] = useState<Teammate[]>(
-    isTeamEvent ? Array.from({ length: minTeammates }, () => ({ name: "", email: "", phone: "" })) : []
+    isTeamEvent ? Array.from({ length: minTeammates }, () => ({ name: "", email: "", phone: "", year: "", department: "", division: "" })) : []
   )
   const [loading, setLoading] = useState(false)
   const [error, setError]     = useState("")
@@ -170,7 +170,7 @@ function RegistrationModal({
     setTeammates(p => p.map((t, idx) => idx === i ? { ...t, [k]: v } : t))
 
   const addTeammate = () => {
-    if (teammates.length < maxTeammates) setTeammates(p => [...p, { name: "", email: "", phone: "" }])
+    if (teammates.length < maxTeammates) setTeammates(p => [...p, { name: "", email: "", phone: "", year: "", department: "", division: "" }])
   }
   const removeTeammate = (i: number) => {
     if (teammates.length > minTeammates) setTeammates(p => p.filter((_, idx) => idx !== i))
@@ -197,7 +197,7 @@ function RegistrationModal({
       }
       for (let i = 0; i < teammates.length; i++) {
         if (!teammates[i].name.trim() || !teammates[i].email.trim()) {
-          setError(`Teammate ${i + 1}'s name and email are required.`); return
+          setError(`Teammate ${i + 2}'s name and email are required.`); return
         }
       }
     }
@@ -240,9 +240,28 @@ function RegistrationModal({
 
           <form onSubmit={handleSubmit} className="space-y-6">
 
-            {/* ── Your info ── */}
+            {/* ── Team Name (only for team events) ── */}
+            {isTeamEvent && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between border-b border-white/6 pb-2">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-white/30">
+                    {teamNameLabel || "Team"} · {1 + teammates.length}/{maxTeamSize} members
+                  </p>
+                </div>
+
+                {/* Team name */}
+                <div>
+                  <label className={labelCls}>{teamNameLabel || "Team Name"} *</label>
+                  <input type="text" value={teamName} onChange={e => setTeamName(e.target.value)} placeholder="Enter team name" className={inputCls} />
+                </div>
+              </div>
+            )}
+
+            {/* ── Your info / Team leader info ── */}
             <div className="space-y-4">
-              <p className="text-[10px] font-black uppercase tracking-widest text-white/30 border-b border-white/6 pb-2">Your Info</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-white/30 border-b border-white/6 pb-2">
+                {isTeamEvent ? "Team Leader Info" : "Your Info"}
+              </p>
               <div className="grid grid-cols-2 gap-3">
                 <div className="col-span-2">
                   <label className={labelCls}>Full Name *</label>
@@ -280,26 +299,14 @@ function RegistrationModal({
               </div>
             </div>
 
-            {/* ── Team section (only for team events) ── */}
+            {/* ── Teammates (only for team events) ── */}
             {isTeamEvent && (
               <div className="space-y-4">
-                <div className="flex items-center justify-between border-b border-white/6 pb-2">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-white/30">
-                    {teamNameLabel || "Team"} · {1 + teammates.length}/{maxTeamSize} members
-                  </p>
-                </div>
-
-                {/* Team name */}
-                <div>
-                  <label className={labelCls}>{teamNameLabel || "Team Name"} *</label>
-                  <input type="text" value={teamName} onChange={e => setTeamName(e.target.value)} placeholder="Enter team name" className={inputCls} />
-                </div>
-
                 {/* Teammate rows */}
                 {teammates.map((tm, i) => (
                   <div key={i} className="rounded-2xl bg-white/[0.015] border border-white/6 p-5 space-y-3 relative">
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-primary">Teammate {i + 1}</p>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-primary">Teammate {i + 2}</p>
                       {teammates.length > minTeammates && (
                         <button type="button" onClick={() => removeTeammate(i)}
                           className="p-1.5 rounded-full bg-white/5 hover:bg-red-500/20 text-white/40 hover:text-red-400 transition-colors">
@@ -314,11 +321,32 @@ function RegistrationModal({
                       </div>
                       <div>
                         <label className={labelCls}>Email *</label>
-                        <input type="email" value={tm.email} onChange={e => setTM(i, "email", e.target.value)} placeholder="email" className={inputCls} />
+                        <input type="email" value={tm.email} onChange={e => setTM(i, "email", e.target.value)} placeholder="Email" className={inputCls} />
                       </div>
                       <div>
                         <label className={labelCls}>Phone</label>
                         <input type="tel" value={tm.phone} onChange={e => setTM(i, "phone", e.target.value)} placeholder="+91" className={inputCls} />
+                      </div>
+                      <div>
+                        <label className={labelCls}>Year</label>
+                        <select value={tm.year} onChange={e => setTM(i, "year", e.target.value)} className={inputCls + " appearance-none cursor-pointer"}>
+                          <option value="" className="bg-[#0b1220] text-white/50">Select Year</option>
+                          {YEAR_OPTIONS.map(o => <option key={o} value={o} className="bg-[#0b1220] text-white">{o}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className={labelCls}>Dept.</label>
+                        <select value={tm.department} onChange={e => setTM(i, "department", e.target.value)} className={inputCls + " appearance-none cursor-pointer"}>
+                          <option value="" className="bg-[#0b1220] text-white/50">Select Dept.</option>
+                          {DEPT_OPTIONS.map(o => <option key={o} value={o} className="bg-[#0b1220] text-white">{o}</option>)}
+                        </select>
+                      </div>
+                      <div className="col-span-2">
+                        <label className={labelCls}>Division</label>
+                        <select value={tm.division} onChange={e => setTM(i, "division", e.target.value)} className={inputCls + " appearance-none cursor-pointer"}>
+                          <option value="" className="bg-[#0b1220] text-white/50">Select Div.</option>
+                          {DIV_OPTIONS.map(o => <option key={o} value={o} className="bg-[#0b1220] text-white">{o}</option>)}
+                        </select>
                       </div>
                     </div>
                   </div>

@@ -8,7 +8,8 @@ const userSchema = new mongoose.Schema(
   {
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     username: { type: String, required: true, unique: true, trim: true },
-    passwordHash: { type: String, required: true },
+    passwordHash: { type: String }, // Made optional for OAuth users
+    authProvider: { type: String, default: "local", enum: ["local", "google"] },
     // Profile fields (optional — filled in on the profile page)
     fullName: { type: String, trim: true, default: "" },
     year: { type: String, enum: [...YEAR_VALUES, ""], default: "" },
