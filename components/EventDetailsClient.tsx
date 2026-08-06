@@ -461,8 +461,7 @@ export function EventDetailsClient({ event, onBack, backHref }: Props) {
   }, { scope: containerRef, dependencies: [event._id] })
 
   const handleRegisterClick = () => {
-    if (!user) setAuthModalOpen(true)
-    else setRegModalOpen(true)
+    setRegModalOpen(true)
   }
 
   const handleGoogleForm = () => {
