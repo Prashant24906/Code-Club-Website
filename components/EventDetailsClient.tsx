@@ -29,6 +29,7 @@ type ClubEvent = {
   maxTeamSize?: number | null
   teamNameLabel?: string
   prizePool?: { position: string, amount: string }[] | null
+  registrationStartTime? : Date | null
 }
 
 function getImages(event: ClubEvent): string[] {
@@ -125,8 +126,8 @@ function ImageCarousel({ images, alt }: { images: string[]; alt: string }) {
 // ─── Registration Modal ───────────────────────────────────────────────────────
 
 const YEAR_OPTIONS = ["FY", "SY", "TY", "BE", "Passout", "Other"]
-const DEPT_OPTIONS = ["IT", "CS", "MECH", "CIVIL", "EXTC", "ETRX", "AIDS", "AIML", "OTHER"]
-const DIV_OPTIONS  = ["A", "B", "C", "D"]
+const DEPT_OPTIONS = ["IT","AIML"]
+const DIV_OPTIONS  = ["A", "B"]
 
 type Teammate = { name: string; email: string; phone: string; year: string; department: string; division: string }
 
