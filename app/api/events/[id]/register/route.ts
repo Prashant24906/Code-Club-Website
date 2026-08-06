@@ -105,16 +105,21 @@ export async function POST(
     }
   }
 
-  // Require a logged-in user
+  // Optional logged-in user
   const userId = tryGetUserId(req);
-  if (!userId) {
-    return NextResponse.json({ error: "You must be signed in to register for this event." }, { status: 401 });
-  }
 
   // Prevent duplicate registration
-  const existing = await Registration.findOne({ eventId, userId });
-  if (existing) {
-    return NextResponse.json({ error: "You are already registered for this event." }, { status: 409 });
+  if (userId) {
+    const existing = await Registration.findOne({ eventId, userId });
+    if (existing) {
+      return NextResponse.json({ error: "You are already registered for this event." }, { status: 409 });
+    }
+  } else {
+    // For guests, check by email to prevent obvious duplicates
+    const existing = await Registration.findOne({ eventId, email });
+    if (existing) {
+      return NextResponse.json({ error: "This email is already registered for this event." }, { status: 409 });
+    }
   }
 
   const registration = await Registration.create({

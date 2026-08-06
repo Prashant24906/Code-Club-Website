@@ -291,12 +291,7 @@ export function Events() {
 
   const handleRegister = (e: React.MouseEvent, formLink: string) => {
     e.stopPropagation()
-    if (user) {
-      window.open(formLink, "_blank", "noopener,noreferrer")
-    } else {
-      setPendingFormLink(formLink)
-      setAuthModalOpen(true)
-    }
+    window.open(formLink, "_blank", "noopener,noreferrer")
   }
 
   if (!eventsEnabled) {
