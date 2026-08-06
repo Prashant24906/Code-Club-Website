@@ -470,7 +470,7 @@ export function EventDetailsClient({ event, onBack, backHref }: Props) {
   }
 
   return (
-    <div ref={containerRef} className="relative min-h-screen w-full overflow-x-hidden text-blue-50">
+    <div ref={containerRef} className="relative min-h-screen w-full overflow-x-hidden">
 
       {/* ═══════════════════════════════════════════════════
           HERO — Poster-centric with meta info
@@ -639,27 +639,27 @@ export function EventDetailsClient({ event, onBack, backHref }: Props) {
             {/* ── MAIN CONTENT ── */}
             <div className="lg:col-span-8 ed-fade">
               {/* About section */}
-              <div className="rounded-2xl border border-white/8 bg-white/[0.015] p-6 md:p-8">
-                <h2 className="text-[11px] font-black uppercase tracking-[0.18em] text-white/55 flex items-center gap-2 mb-6">
+              <div className="rounded-2xl border border-border bg-muted/30 p-6 md:p-8">
+                <h2 className="text-[11px] font-black uppercase tracking-[0.18em] text-muted-foreground flex items-center gap-2 mb-6">
                   <Info size={13} className="text-primary" />
                   About this Event
                 </h2>
 
                 {event.description ? (
-                  <div className="prose prose-invert max-w-none text-blue-50/70 leading-relaxed">
-                    <ReactMarkdown>{event.description}</ReactMarkdown>
+                  <div className="prose dark:prose-invert max-w-none text-foreground/70 leading-relaxed ">
+                    {event.description}
                   </div>
                 ) : (
-                  <p className="text-sm text-blue-50/45">Details will be shared soon.</p>
+                  <p className="text-sm text-muted-foreground">Details will be shared soon.</p>
                 )}
 
                 {/* Stats grid inside content */}
                 <div className="grid sm:grid-cols-2 gap-5 mt-8">
-                  <div className="p-6 rounded-3xl bg-white/[0.02] border border-white/6">
+                  <div className="p-6 rounded-3xl bg-muted/40 border border-border">
                     <p className="text-[10px] uppercase font-black tracking-widest text-primary mb-3 flex items-center gap-2">
                       <Users size={12} /> Participation Mode
                     </p>
-                    <p className="text-2xl font-black text-white uppercase tracking-tight">
+                    <p className="text-2xl font-black text-foreground uppercase tracking-tight">
                       {!event.minTeamSize && !event.maxTeamSize
                         ? "Solo Entry"
                         : event.minTeamSize === event.maxTeamSize
@@ -668,18 +668,18 @@ export function EventDetailsClient({ event, onBack, backHref }: Props) {
                     </p>
                   </div>
                   {event.location && (
-                    <div className="p-6 rounded-3xl bg-white/[0.02] border border-white/6">
+                    <div className="p-6 rounded-3xl bg-muted/40 border border-border">
                       <p className="text-[10px] uppercase font-black tracking-widest text-primary mb-3 flex items-center gap-2">
                         <MapPin size={12} /> Venue
                       </p>
-                      <p className="text-xl font-black text-white uppercase tracking-tight">{event.location}</p>
+                      <p className="text-xl font-black text-foreground uppercase tracking-tight">{event.location}</p>
                     </div>
                   )}
                   {/* Prize Pool card — always shown */}
-                  <div className={`p-6 rounded-3xl border border-white/6 ${
+                  <div className={`p-6 rounded-3xl border ${
                     event.prizePool && event.prizePool.length > 0
                       ? "bg-yellow-300/5 border-yellow-300/20"
-                      : "bg-white/[0.02]"
+                      : "bg-muted/40 border-border"
                   }`}>
                     <p className="text-[10px] uppercase font-black tracking-widest text-primary mb-3 flex items-center gap-2">
                       <Trophy size={12} /> Prize Pool
@@ -687,14 +687,14 @@ export function EventDetailsClient({ event, onBack, backHref }: Props) {
                     {event.prizePool && event.prizePool.length > 0 ? (
                       <div className="space-y-2 mt-4">
                         {event.prizePool.map((prize, idx) => (
-                           <div key={idx} className="flex items-center justify-between pb-2 border-b border-white/10 last:border-0 last:pb-0">
-                              <span className="text-white/60 font-semibold">{prize.position}</span>
+                           <div key={idx} className="flex items-center justify-between pb-2 border-b border-border last:border-0 last:pb-0">
+                              <span className="text-muted-foreground font-semibold">{prize.position}</span>
                               <span className="text-xl font-black text-yellow-300 uppercase">{prize.amount}</span>
                            </div>
                         ))}
                       </div>
                     ) : (
-                      <p className="text-lg font-black text-white/30 uppercase tracking-tight">No Prize Pool</p>
+                      <p className="text-lg font-black text-muted-foreground uppercase tracking-tight">No Prize Pool</p>
                     )}
                   </div>
                 </div>
@@ -702,13 +702,13 @@ export function EventDetailsClient({ event, onBack, backHref }: Props) {
 
               {/* Photo gallery (if multiple images) */}
               {imgs.length > 1 && (
-                <div className="mt-8 rounded-2xl border border-white/8 bg-white/[0.015] p-6 md:p-8 ed-fade">
-                  <h2 className="text-[11px] font-black uppercase tracking-[0.18em] text-white/55 mb-6">
+                <div className="mt-8 rounded-2xl border border-border bg-muted/30 p-6 md:p-8 ed-fade">
+                  <h2 className="text-[11px] font-black uppercase tracking-[0.18em] text-muted-foreground mb-6">
                     Gallery &middot; {imgs.length} Photos
                   </h2>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {imgs.map((src, i) => (
-                      <div key={i} className="aspect-video rounded-xl overflow-hidden border border-white/8">
+                      <div key={i} className="aspect-video rounded-xl overflow-hidden border border-border">
                         <img src={src} alt={`${event.title} ${i + 1}`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
                       </div>
                     ))}
@@ -719,8 +719,8 @@ export function EventDetailsClient({ event, onBack, backHref }: Props) {
 
             {/* ── SIDEBAR ── */}
             <div className="lg:col-span-4 lg:sticky lg:top-24 h-fit ed-fade">
-              <div className="rounded-[28px] border border-white/8 bg-white/[0.025] p-7 md:p-8 backdrop-blur-xl shadow-2xl space-y-7">
-                <h3 className="font-black text-white uppercase tracking-widest text-xs border-b border-white/6 pb-5">Event Brief</h3>
+              <div className="rounded-[28px] border border-border bg-muted/30 p-7 md:p-8 backdrop-blur-xl shadow-2xl space-y-7">
+                <h3 className="font-black text-foreground uppercase tracking-widest text-xs border-b border-border pb-5">Event Brief</h3>
 
                 <div className="space-y-5 text-sm">
                   {[
@@ -731,18 +731,18 @@ export function EventDetailsClient({ event, onBack, backHref }: Props) {
                     { icon: Trophy, label: "Prize Pool", value: event.prizePool && event.prizePool.length > 0 ? event.prizePool.map(p => `${p.position}: ${p.amount}`).join("\n") : "No Prize Pool" },
                   ].map((item, i) => (
                     <div key={i} className="flex gap-4">
-                      <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center shrink-0 border border-white/5">
+                      <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center shrink-0 border border-border">
                         <item.icon className="text-primary" size={16} />
                       </div>
                       <div>
-                        <p className="text-[9px] uppercase font-black tracking-widest text-white/30 mb-1">{item.label}</p>
-                        <p className="text-white font-bold text-sm leading-snug whitespace-pre-line">{item.value}</p>
+                        <p className="text-[9px] uppercase font-black tracking-widest text-muted-foreground mb-1">{item.label}</p>
+                        <p className="text-foreground font-bold text-sm leading-snug whitespace-pre-line">{item.value}</p>
                       </div>
                     </div>
                   ))}
                 </div>
 
-                <div className="pt-5 border-t border-white/6 space-y-4">
+                <div className="pt-5 border-t border-border space-y-4">
                   {isUpcoming ? (
                     registered ? (
                       <SuccessBanner />
@@ -763,11 +763,11 @@ export function EventDetailsClient({ event, onBack, backHref }: Props) {
                       </button>
                     )
                   ) : (
-                    <p className="text-center text-sm text-white/30 py-2">This event has concluded.</p>
+                    <p className="text-center text-sm text-muted-foreground py-2">This event has concluded.</p>
                   )}
 
                   {isUpcoming && (
-                    <p className="text-center text-[9px] uppercase font-bold tracking-[0.2em] text-white/20 animate-pulse">
+                    <p className="text-center text-[9px] uppercase font-bold tracking-[0.2em] text-muted-foreground/60 animate-pulse">
                       Limited slots available
                     </p>
                   )}

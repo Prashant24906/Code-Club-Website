@@ -488,36 +488,13 @@ export default function EventsAdminPage() {
             <label htmlFor="a-date" className="text-sm font-medium">
               Date
             </label>
-            <div className="relative">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="justify-start font-normal bg-transparent w-full px-4 py-2"
-                    id="a-date"
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {aDate ? (
-                      new Date(aDate).toLocaleDateString()
-                    ) : (
-                      <span className="text-muted-foreground">Pick a date</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent align="start" className="p-0 z-50">
-                  <Calendar
-                    mode="single"
-                    selected={addSelectedDate}
-                    onSelect={(d) => {
-                      if (d) setADate(formatYmd(d) ?? ""); // Ensure a string is always set
-                    }}
-                    defaultMonth={addSelectedDate ?? new Date()}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
+            <input
+              id="a-date"
+              type="date"
+              value={aDate}
+              onChange={(e) => setADate(e.target.value)}
+              className="glass rounded-md px-3 py-2 w-full block text-sm"
+            />
           </div>
           <div className="grid gap-2 sm:col-span-2">
             <label htmlFor="a-location" className="text-sm font-medium">
@@ -689,12 +666,12 @@ export default function EventsAdminPage() {
       />
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="glass-card sm:max-w-2xl max-h-[90vh] overflow-y-auto border-white/10 bg-[#0b1220] text-blue-50" style={{ scrollbarWidth: "thin" }}>
+        <DialogContent className="glass-card sm:max-w-2xl max-h-[90vh] overflow-y-auto border-border" style={{ scrollbarWidth: "thin" }}>
           <DialogHeader>
-            <DialogTitle>Edit Event</DialogTitle>
+            <DialogTitle className="text-xl font-semibold">Edit Event</DialogTitle>
           </DialogHeader>
 
-          <div className="mb-4 space-y-4">
+          <div className="mb-4 space-y-4 mt-2">
             <div className="flex items-center justify-center gap-2">
               <Button
                 type="button"
@@ -768,6 +745,7 @@ export default function EventsAdminPage() {
                 id="e-title"
                 value={eTitle}
                 onChange={(ev) => setETitle(ev.target.value)}
+                placeholder="Hackathon 2025"
                 className="glass rounded-md px-3 py-2"
               />
             </div>
@@ -775,36 +753,13 @@ export default function EventsAdminPage() {
               <label htmlFor="e-date" className="text-sm font-medium">
                 Date
               </label>
-              <div className="relative">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="justify-start font-normal bg-transparent w-full"
-                      id="e-date"
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {eDate ? (
-                        new Date(eDate).toLocaleDateString()
-                      ) : (
-                        <span className="text-muted-foreground">Pick a date</span>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent align="start" className="p-0">
-                    <Calendar
-                      mode="single"
-                      selected={editSelectedDate}
-                      onSelect={(d) => {
-                        if (d) setEDate(formatYmd(d) ?? "");
-                      }}
-                      defaultMonth={editSelectedDate ?? new Date()}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
+              <input
+                id="e-date"
+                type="date"
+                value={eDate}
+                onChange={(e) => setEDate(e.target.value)}
+                className="glass rounded-md px-3 py-2 w-full block text-sm"
+              />
             </div>
             <div className="grid gap-2 sm:col-span-2">
               <label htmlFor="e-location" className="text-sm font-medium">
@@ -814,6 +769,7 @@ export default function EventsAdminPage() {
                 id="e-location"
                 value={eLocation}
                 onChange={(ev) => setELocation(ev.target.value)}
+                placeholder="Auditorium A"
                 className="glass rounded-md px-3 py-2"
               />
             </div>
