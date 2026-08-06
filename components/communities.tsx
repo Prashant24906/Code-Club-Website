@@ -157,9 +157,6 @@ export function Community() {
             <Sparkles size={12} />
             Join The Conversation
           </div>
-          <h2 className="text-4xl md:text-5xl font-bold mb-5">
-            Our <span className="gradient-text">Communities</span>
-          </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto text-pretty">
             Pick your niche, join the group, and start building alongside passionate developers
             from our campus.

@@ -72,11 +72,6 @@ export function Contact() {
   return (
     <section id="contact" ref={sectionRef} className="py-20 px-4">
       <div className="max-w-6xl mx-auto">
-        <div className="contact-heading text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6">Get In <span className="gradient-text">Touch</span></h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto text-pretty">Have questions? Want to join our community? We'd love to hear from you!</p>
-        </div>
-
         <div className="grid grid-cols-1 gap-12">
           <div className="contact-form">
             <div className="glass-card rounded-2xl p-8">

@@ -312,10 +312,6 @@ export function Events() {
   return (
     <section id="events" ref={sectionRef} className="py-20 px-4">
       <div className="max-w-6xl mx-auto">
-        <div className="events-heading text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6">Our <span className="gradient-text">Events</span></h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto text-pretty">Join us for workshops, hackathons, tech talks, and networking events</p>
-        </div>
 
         {/* Upcoming Events */}
         <div className="mb-16">
