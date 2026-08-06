@@ -410,7 +410,7 @@ export function EventDetailsClient({ event, onBack, backHref }: Props) {
   const router = useRouter()
   const containerRef = useRef<HTMLDivElement>(null)
   const { user } = useUser()
-  const [authModalOpen, setAuthModalOpen] = useState(true)
+  const [authModalOpen, setAuthModalOpen] = useState(false)
   const [regModalOpen, setRegModalOpen] = useState(false)
   const [registered, setRegistered] = useState(false)
   const [whatsappLink, setWhatsappLink] = useState<string | null>(null)
@@ -783,7 +783,7 @@ export function EventDetailsClient({ event, onBack, backHref }: Props) {
         onOpenChange={setAuthModalOpen}
         reason="You need to be signed in to register for this event."
         onSuccess={() => {
-          setAuthModalOpen(true)
+          setAuthModalOpen(false)
           setRegModalOpen(true)
         }}
       />
