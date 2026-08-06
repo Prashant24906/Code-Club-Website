@@ -433,7 +433,6 @@ export function EventDetailsClient({ event, onBack, backHref }: Props) {
 
   // Check existing registration on mount
   useEffect(() => {
-    if (!user) { setCheckingReg(false); return }
     fetch(`/api/events/${event._id}/register`)
       .then((r) => r.json())
       .then((d) => { 
