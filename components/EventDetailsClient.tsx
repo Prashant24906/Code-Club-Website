@@ -784,7 +784,7 @@ export function EventDetailsClient({ event, onBack, backHref }: Props) {
         onOpenChange={setAuthModalOpen}
         reason="You need to be signed in to register for this event."
         onSuccess={() => {
-          setAuthModalOpen(false)
+          setAuthModalOpen(true)
           setRegModalOpen(true)
         }}
       />
