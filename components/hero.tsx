@@ -5,9 +5,7 @@ import { useGSAP } from "@gsap/react"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 import { useEffect, useRef, useState } from "react"
 import Image from "next/image"
-import { useRouter } from "next/navigation"
 import { Code, Users, Zap, ArrowRight } from "lucide-react"
-import { useUser } from "@/hooks/use-user"
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -120,19 +118,13 @@ export function Hero() {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [hasClicked, setHasClicked] = useState(false)
   const [loading, setLoading] = useState(true)
-  const { user } = useUser()
-  const router = useRouter()
   const [registeredUsersCount, setRegisteredUsersCount] = useState(0)
 
   const nextPanelRef = useRef<HTMLDivElement>(null)
 
   const handleJoinNow = () => {
-    if (user) {
-      const el = document.getElementById("events")
-      el?.scrollIntoView({ behavior: "smooth" })
-    } else {
-      router.push("/login")
-    }
+    const el = document.getElementById("home-events")
+    el?.scrollIntoView({ behavior: "smooth" })
   }
 
   // Simulate load gate (mirrors the video-loading wait)
@@ -429,7 +421,7 @@ export function Hero() {
                         boxShadow: `0 8px 24px ${current.accent}40`,
                       }}
                     >
-                      {user ? "Explore Events" : "Join Now"} <ArrowRight size={15} />
+                      Explore <ArrowRight size={15} />
                     </button>
                     {/* Registered users counter */}
                     {registeredUsersCount > 0 && (
