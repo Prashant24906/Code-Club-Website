@@ -10,8 +10,6 @@ import {
 } from "lucide-react"
 import { FiChevronRight } from "react-icons/fi"
 import ReactMarkdown from "react-markdown"
-import { useUser } from "@/hooks/use-user"
-import { AuthModal } from "@/components/auth-modal"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -411,12 +409,9 @@ interface Props {
 export function EventDetailsClient({ event, onBack, backHref }: Props) {
   const router = useRouter()
   const containerRef = useRef<HTMLDivElement>(null)
-  const { user } = useUser()
-  const [authModalOpen, setAuthModalOpen] = useState(false)
   const [regModalOpen, setRegModalOpen] = useState(false)
   const [registered, setRegistered] = useState(false)
   const [whatsappLink, setWhatsappLink] = useState<string | null>(null)
-  const [checkingReg, setCheckingReg] = useState(true)
 
   const imgs = getImages(event)
   const firstImg = imgs[0] ?? null
@@ -437,20 +432,16 @@ export function EventDetailsClient({ event, onBack, backHref }: Props) {
     ? new Date(event.registrationCloseTime) < new Date()
     : false;
 
-  // Check existing registration on mount
+  // Check if already registered (no auth required, uses localStorage)
   useEffect(() => {
-    if (!user) { setCheckingReg(false); return }
-    fetch(`/api/events/${event._id}/register`)
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.registered) {
-          setRegistered(true)
-          if (d.whatsappLink) setWhatsappLink(d.whatsappLink)
-        }
-      })
-      .catch(() => { })
-      .finally(() => setCheckingReg(false))
-  }, [user, event._id])
+    const key = `registered_${event._id}`
+    const stored = localStorage.getItem(key)
+    if (stored) {
+      setRegistered(true)
+      const parsed = JSON.parse(stored)
+      if (parsed.whatsappLink) setWhatsappLink(parsed.whatsappLink)
+    }
+  }, [event._id])
 
   const handleBack = () => {
     if (onBack) onBack()
@@ -597,7 +588,7 @@ export function EventDetailsClient({ event, onBack, backHref }: Props) {
                     ) : (
                       <button
                         onClick={handleRegisterClick}
-                        disabled={checkingReg || !isRegistrationOpen || isRegistrationClosed}
+                        disabled={!isRegistrationOpen || isRegistrationClosed}
                         className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-primary text-primary-foreground text-sm font-black uppercase tracking-widest transition-all hover:opacity-90 hover:scale-[1.02] shadow-lg shadow-primary/20 disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100"
                       >
                         {!isRegistrationOpen
@@ -777,17 +768,6 @@ export function EventDetailsClient({ event, onBack, backHref }: Props) {
         </div>
       </section>
 
-      {/* Auth Modal — shown when guest clicks Register */}
-      <AuthModal
-        open={authModalOpen}
-        onOpenChange={setAuthModalOpen}
-        reason="You need to be signed in to register for this event."
-        onSuccess={() => {
-          setAuthModalOpen(false)
-          setRegModalOpen(true)
-        }}
-      />
-
       {/* Registration Modal */}
       {regModalOpen && (
         <RegistrationModal
@@ -796,18 +776,14 @@ export function EventDetailsClient({ event, onBack, backHref }: Props) {
           minTeamSize={event.minTeamSize ?? null}
           maxTeamSize={event.maxTeamSize ?? null}
           teamNameLabel={event.teamNameLabel ?? ""}
-          prefill={{
-            name: user?.fullName ?? "",
-            email: user?.email ?? "",
-            year: user?.year ?? "",
-            department: user?.department ?? "",
-            division: user?.division ?? "",
-          }}
+          prefill={{ name: "", email: "", year: "", department: "", division: "" }}
           onClose={() => setRegModalOpen(false)}
           onSuccess={(link) => {
             setRegModalOpen(false)
             setRegistered(true)
             if (link) setWhatsappLink(link)
+            // Remember registration locally
+            localStorage.setItem(`registered_${event._id}`, JSON.stringify({ whatsappLink: link ?? null }))
           }}
         />
       )}

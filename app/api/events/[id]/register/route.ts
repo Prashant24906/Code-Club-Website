@@ -1,43 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyUserToken } from "@/lib/user-jwt";
 import { connectDB } from "@/lib/mongodb";
 import Registration from "@/models/registration";
 import Event from "@/models/events";
 
-// ── Helpers ────────────────────────────────────────────────────────────────────
-
-function tryGetUserId(req: NextRequest): string | null {
-  const token = req.cookies.get("user_token")?.value;
-  if (!token) return null;
-  try {
-    const payload = verifyUserToken(token);
-    return payload?.id ?? null;
-  } catch {
-    return null;
-  }
-}
-
-// ── GET — check registration status (logged-in only) ─────────────────────────
-
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const userId = tryGetUserId(req);
-  if (!userId) return NextResponse.json({ registered: false });
-
-  await connectDB();
-  const { id: eventId } = await params;
-  const existing = await Registration.findOne({ eventId, userId }).lean();
-  
-  if (existing) {
-    const event = await Event.findById(eventId).select("whatsappLink").lean() as { whatsappLink?: string } | null;
-    return NextResponse.json({ registered: true, whatsappLink: event?.whatsappLink });
-  }
-  return NextResponse.json({ registered: false });
-}
-
-// ── POST — register (login required) ────────────────────────────────────────
+// ── POST — register (no auth required) ──────────────────────────────────────
 
 export async function POST(
   req: NextRequest,
@@ -46,20 +12,27 @@ export async function POST(
   await connectDB();
   const { id: eventId } = await params;
 
-  // Fetch event to get team size constraints
+  // Fetch event to validate constraints
   const event = await Event.findById(eventId).lean() as {
     minTeamSize?: number | null;
     maxTeamSize?: number | null;
     registrationStartTime?: string | Date | null;
+    registrationCloseTime?: string | Date | null;
+    whatsappLink?: string;
   } | null;
 
   if (!event) {
     return NextResponse.json({ error: "Event not found." }, { status: 404 });
   }
 
-  // Check if registration is open
+  // Check if registration has opened yet
   if (event.registrationStartTime && new Date(event.registrationStartTime) > new Date()) {
     return NextResponse.json({ error: "Registration has not opened yet." }, { status: 403 });
+  }
+
+  // Check if registration is closed
+  if (event.registrationCloseTime && new Date(event.registrationCloseTime) < new Date()) {
+    return NextResponse.json({ error: "Registration is closed for this event." }, { status: 403 });
   }
 
   const body = await req.json().catch(() => ({})) as Record<string, unknown>;
@@ -88,7 +61,7 @@ export async function POST(
   // Validate team size
   const isTeamEvent = event.minTeamSize != null && event.maxTeamSize != null;
   if (isTeamEvent) {
-    const totalMembers = 1 + teammates.length; // registrant + teammates
+    const totalMembers = 1 + teammates.length;
     const min = event.minTeamSize!;
     const max = event.maxTeamSize!;
     if (totalMembers < min) {
@@ -105,33 +78,21 @@ export async function POST(
     }
   }
 
-  // Optional logged-in user
-  const userId = tryGetUserId(req);
-
-  // Prevent duplicate registration
-  if (userId) {
-    const existing = await Registration.findOne({ eventId, userId });
-    if (existing) {
-      return NextResponse.json({ error: "You are already registered for this event." }, { status: 409 });
-    }
-  } else {
-    // For guests, check by email to prevent obvious duplicates
-    const existing = await Registration.findOne({ eventId, email });
-    if (existing) {
-      return NextResponse.json({ error: "This email is already registered for this event." }, { status: 409 });
-    }
+  // Prevent duplicate registration by email
+  const existing = await Registration.findOne({ eventId, email });
+  if (existing) {
+    return NextResponse.json({ error: "This email is already registered for this event." }, { status: 409 });
   }
 
   const registration = await Registration.create({
     eventId,
-    userId,
     name, email, phone, year, department, division,
     teamName,
     teammates,
   });
 
-  return NextResponse.json({ 
-    success: true, 
+  return NextResponse.json({
+    success: true,
     registration,
     whatsappLink: event.whatsappLink
   }, { status: 201 });

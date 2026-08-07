@@ -7,8 +7,6 @@ import { gsap } from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 import { Calendar, MapPin, Clock, ChevronLeft, ChevronRight, Loader2 } from "lucide-react"
 import { Markdown } from "@/components/ui/markdown"
-import { useUser } from "@/hooks/use-user"
-import { AuthModal } from "@/components/auth-modal"
 import { useCachedEvents } from "@/lib/data-cache"
 import ElectricBorder from "./ElectricBorder"
 
@@ -185,9 +183,6 @@ export function Events() {
   const [eventAspectById, setEventAspectById] = useState<Record<string, "square" | "portrait">>({})
   const sectionRef = useRef<HTMLElement>(null)
   const router = useRouter()
-  const { user } = useUser()
-  const [authModalOpen, setAuthModalOpen] = useState(false)
-  const [pendingFormLink, setPendingFormLink] = useState<string | null>(null)
   const [navigatingId, setNavigatingId] = useState<string | null>(null)
 
   useEffect(() => {
@@ -475,18 +470,6 @@ export function Events() {
         </div>
       </div>
 
-      {/* Auth Modal */}
-      <AuthModal
-        open={authModalOpen}
-        onOpenChange={setAuthModalOpen}
-        reason="You need to be signed in to register for events."
-        onSuccess={() => {
-          if (pendingFormLink) {
-            window.open(pendingFormLink, "_blank", "noopener,noreferrer")
-            setPendingFormLink(null)
-          }
-        }}
-      />
     </section>
   )
 }
