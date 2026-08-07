@@ -29,7 +29,8 @@ type ClubEvent = {
   maxTeamSize?: number | null
   teamNameLabel?: string
   prizePool?: { position: string, amount: string }[] | null
-  registrationStartTime? : Date | null
+  registrationStartTime?: Date | null
+  registrationCloseTime?: Date | null
 }
 
 function getImages(event: ClubEvent): string[] {
@@ -126,8 +127,8 @@ function ImageCarousel({ images, alt }: { images: string[]; alt: string }) {
 // ─── Registration Modal ───────────────────────────────────────────────────────
 
 const YEAR_OPTIONS = ["FY", "SY", "TY", "BE", "Passout", "Other"]
-const DEPT_OPTIONS = ["IT","AIML"]
-const DIV_OPTIONS  = ["A", "B"]
+const DEPT_OPTIONS = ["IT", "AIML"]
+const DIV_OPTIONS = ["A", "B"]
 
 type Teammate = { name: string; email: string; phone: string; year: string; department: string; division: string }
 
@@ -156,14 +157,14 @@ function RegistrationModal({
     name: prefill.name, email: prefill.email, phone: "",
     year: prefill.year, department: prefill.department, division: prefill.division,
   })
-  const [teamName, setTeamName]   = useState("")
+  const [teamName, setTeamName] = useState("")
   const [teammates, setTeammates] = useState<Teammate[]>(
     isTeamEvent ? Array.from({ length: minTeammates }, () => ({ name: "", email: "", phone: "", year: "", department: "", division: "" })) : []
   )
   const [loading, setLoading] = useState(false)
-  const [error, setError]     = useState("")
+  const [error, setError] = useState("")
   const overlayRef = useRef<HTMLDivElement>(null)
-  const panelRef   = useRef<HTMLDivElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
 
   const setField = (k: keyof typeof form, v: string) => setForm(p => ({ ...p, [k]: v }))
 
@@ -223,7 +224,7 @@ function RegistrationModal({
     <div ref={overlayRef} className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
       onClick={e => { if (e.target === overlayRef.current) close() }}>
       <div ref={panelRef} className="relative w-full max-w-lg rounded-[28px] border border-white/8 bg-[#0b1220] shadow-[0_0_80px_rgba(0,0,0,0.8)] p-7 md:p-8 max-h-[90vh] overflow-y-auto" style={{ scrollbarWidth: "thin" }}>
-        
+
         {/* Decorative glow inside modal */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[80%] h-[150px] bg-primary/10 blur-[80px] rounded-full pointer-events-none" />
 
@@ -391,7 +392,7 @@ function SuccessBanner({ whatsappLink }: { whatsappLink?: string | null }) {
       </div>
       {whatsappLink && (
         <a href={whatsappLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[#25D366] text-white text-sm font-bold shadow-lg shadow-[#25D366]/20 transition-all hover:scale-[1.02] hover:bg-[#20b958]">
-          <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
+          <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z" /></svg>
           Join WhatsApp Group
         </a>
       )}
@@ -428,22 +429,26 @@ export function EventDetailsClient({ event, onBack, backHref }: Props) {
         ? `${event.minTeamSize} Members`
         : `${event.minTeamSize}\u2013${event.maxTeamSize} Members`
 
-  const isRegistrationOpen = event.registrationStartTime 
-    ? new Date(event.registrationStartTime) <= new Date() 
+  const isRegistrationOpen = event.registrationStartTime
+    ? new Date(event.registrationStartTime) <= new Date()
     : true;
+
+  const isRegistrationClosed = event.registrationCloseTime
+    ? new Date(event.registrationCloseTime) < new Date()
+    : false;
 
   // Check existing registration on mount
   useEffect(() => {
     if (!user) { setCheckingReg(false); return }
     fetch(`/api/events/${event._id}/register`)
       .then((r) => r.json())
-      .then((d) => { 
+      .then((d) => {
         if (d.registered) {
           setRegistered(true)
           if (d.whatsappLink) setWhatsappLink(d.whatsappLink)
         }
       })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setCheckingReg(false))
   }, [user, event._id])
 
@@ -507,14 +512,23 @@ export function EventDetailsClient({ event, onBack, backHref }: Props) {
 
               {/* Status badge */}
               <div className="flex flex-wrap gap-3">
-                <span className={`inline-flex items-center px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                  isUpcoming ? "bg-primary text-primary-foreground" : "bg-white/10 text-white/40"
-                }`}>
+                <span className={`inline-flex items-center px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${isUpcoming ? "bg-primary text-primary-foreground" : "bg-white/10 text-white/40"
+                  }`}>
                   {isUpcoming ? "Upcoming" : "Completed"}
                 </span>
                 {teamLabel !== "Solo" && (
                   <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-white/10 text-white/40 text-[10px] font-black uppercase tracking-widest">
                     <Users size={10} /> {teamLabel}
+                  </span>
+                )}
+                {isUpcoming && isRegistrationClosed && (
+                  <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-red-500/20 border border-red-500/30 text-red-400 text-[10px] font-black uppercase tracking-widest">
+                    Registration Closed
+                  </span>
+                )}
+                {isUpcoming && !isRegistrationClosed && !isRegistrationOpen && (
+                  <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 text-[10px] font-black uppercase tracking-widest">
+                    Reg. Opens Soon
                   </span>
                 )}
               </div>
@@ -559,21 +573,36 @@ export function EventDetailsClient({ event, onBack, backHref }: Props) {
                   <>
                     {registered ? (
                       <SuccessBanner whatsappLink={whatsappLink} />
+                    ) : isRegistrationClosed ? (
+                      <div className="flex flex-col gap-1.5">
+                        <div className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-red-500/10 border border-red-500/25 text-red-400 text-sm font-black uppercase tracking-widest cursor-not-allowed">
+                          <span>🔒</span> Registration Closed
+                        </div>
+                        {event.registrationCloseTime && (
+                          <p className="text-xs text-white/30 text-center">
+                            Closed {new Date(event.registrationCloseTime).toLocaleDateString("en-IN", { month: "short", day: "numeric", hour: "numeric", minute: "numeric" })}
+                          </p>
+                        )}
+                      </div>
                     ) : event.googleFormLink ? (
                       <button
                         onClick={handleGoogleForm}
-                        disabled={!isRegistrationOpen}
+                        disabled={!isRegistrationOpen || isRegistrationClosed}
                         className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-primary text-primary-foreground text-sm font-black uppercase tracking-widest transition-all hover:opacity-90 hover:scale-[1.02] shadow-lg shadow-primary/20 disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100"
                       >
-                        {!isRegistrationOpen ? "Opens " + new Date(event.registrationStartTime!).toLocaleDateString("en-IN", { month: "short", day: "numeric", hour: "numeric", minute: "numeric" }) : "Register Now"}
+                        {!isRegistrationOpen
+                          ? "Opens " + new Date(event.registrationStartTime!).toLocaleDateString("en-IN", { month: "short", day: "numeric", hour: "numeric", minute: "numeric" })
+                          : "Register Now"}
                       </button>
                     ) : (
                       <button
                         onClick={handleRegisterClick}
-                        disabled={checkingReg || !isRegistrationOpen}
+                        disabled={checkingReg || !isRegistrationOpen || isRegistrationClosed}
                         className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-primary text-primary-foreground text-sm font-black uppercase tracking-widest transition-all hover:opacity-90 hover:scale-[1.02] shadow-lg shadow-primary/20 disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100"
                       >
-                        {!isRegistrationOpen ? "Opens " + new Date(event.registrationStartTime!).toLocaleDateString("en-IN", { month: "short", day: "numeric", hour: "numeric", minute: "numeric" }) : "Register Now"}
+                        {!isRegistrationOpen
+                          ? "Opens " + new Date(event.registrationStartTime!).toLocaleDateString("en-IN", { month: "short", day: "numeric", hour: "numeric", minute: "numeric" })
+                          : "Register Now"}
                       </button>
                     )}
                     <button
@@ -676,21 +705,20 @@ export function EventDetailsClient({ event, onBack, backHref }: Props) {
                     </div>
                   )}
                   {/* Prize Pool card — always shown */}
-                  <div className={`p-6 rounded-3xl border ${
-                    event.prizePool && event.prizePool.length > 0
+                  <div className={`p-6 rounded-3xl border ${event.prizePool && event.prizePool.length > 0
                       ? "bg-yellow-300/5 border-yellow-300/20"
                       : "bg-muted/40 border-border"
-                  }`}>
+                    }`}>
                     <p className="text-[10px] uppercase font-black tracking-widest text-primary mb-3 flex items-center gap-2">
                       <Trophy size={12} /> Prize Pool
                     </p>
                     {event.prizePool && event.prizePool.length > 0 ? (
                       <div className="space-y-2 mt-4">
                         {event.prizePool.map((prize, idx) => (
-                           <div key={idx} className="flex items-center justify-between pb-2 border-b border-border last:border-0 last:pb-0">
-                              <span className="text-muted-foreground font-semibold">{prize.position}</span>
-                              <span className="text-xl font-black text-yellow-300 uppercase">{prize.amount}</span>
-                           </div>
+                          <div key={idx} className="flex items-center justify-between pb-2 border-b border-border last:border-0 last:pb-0">
+                            <span className="text-muted-foreground font-semibold">{prize.position}</span>
+                            <span className="text-xl font-black text-yellow-300 uppercase">{prize.amount}</span>
+                          </div>
                         ))}
                       </div>
                     ) : (
@@ -741,7 +769,7 @@ export function EventDetailsClient({ event, onBack, backHref }: Props) {
                     </div>
                   ))}
                 </div>
-                
+
               </div>
             </div>
 
@@ -769,11 +797,11 @@ export function EventDetailsClient({ event, onBack, backHref }: Props) {
           maxTeamSize={event.maxTeamSize ?? null}
           teamNameLabel={event.teamNameLabel ?? ""}
           prefill={{
-            name:       user?.fullName ?? "",
-            email:      user?.email ?? "",
-            year:       user?.year ?? "",
+            name: user?.fullName ?? "",
+            email: user?.email ?? "",
+            year: user?.year ?? "",
             department: user?.department ?? "",
-            division:   user?.division ?? "",
+            division: user?.division ?? "",
           }}
           onClose={() => setRegModalOpen(false)}
           onSuccess={(link) => {

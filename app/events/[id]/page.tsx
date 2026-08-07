@@ -52,6 +52,9 @@ export default async function EventPage({ params }: Props) {
     registrationStartTime: raw.registrationStartTime instanceof Date 
       ? raw.registrationStartTime.toISOString() 
       : (raw.registrationStartTime ? String(raw.registrationStartTime) : null),
+    registrationCloseTime: raw.registrationCloseTime instanceof Date
+      ? raw.registrationCloseTime.toISOString()
+      : (raw.registrationCloseTime ? String(raw.registrationCloseTime) : null),
   };
 
   return (

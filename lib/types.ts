@@ -13,6 +13,7 @@ export interface EventType {
   teamNameLabel?: string;
   prizePool?: { position: string, amount: string }[];
   registrationStartTime?: string | null;
+  registrationCloseTime?: string | null;
   whatsappLink?: string;
 }
 

@@ -24,6 +24,7 @@ type Event = {
   location?: string
   googleFormLink?: string
   time?: string
+  registrationCloseTime?: string | null
 }
 
 /** Resolve the effective image array for an event (supports legacy single image) */
@@ -333,11 +334,18 @@ export function Events() {
               <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6 justify-items-center">
                 {upcomingEvents.map((event) => {
                   const imgs = getImages(event)
+                  const isRegClosed = event.registrationCloseTime
+                    ? new Date(event.registrationCloseTime) < new Date()
+                    : false
                   return (
                     <Link key={event._id} href={`/events/${event._id}`} onClick={() => setNavigatingId(event._id)} className="event-card relative block glass-card rounded-2xl p-3 sm:p-4 group cursor-pointer w-full max-w-[320px] border border-white/10 hover:-translate-y-1 transition-transform duration-300">
                         <div className={`relative bg-black/20 rounded-xl overflow-hidden border border-white/10 mb-4 ${eventAspectById[event._id] === "square" ? "aspect-square" : "aspect-[3/4]"}`}>
                           <ImageCarousel images={imgs} alt={event.title} className="absolute inset-0" />
-                          <div className="absolute top-3 right-3 bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-medium z-20">Upcoming</div>
+                          {isRegClosed ? (
+                            <div className="absolute top-3 right-3 bg-red-500/90 text-white px-3 py-1 rounded-full text-xs font-medium z-20">Reg. Closed</div>
+                          ) : (
+                            <div className="absolute top-3 right-3 bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-medium z-20">Upcoming</div>
+                          )}
                         </div>
                         <h4 className="text-lg font-semibold mb-2 group-hover:text-primary transition-colors line-clamp-2 min-h-[56px]">{event.title}</h4>
                         <Markdown content={event.description || ""} className="mb-4 text-sm min-h-[60px] max-h-[72px] overflow-hidden [mask-image:linear-gradient(to_bottom,black_75%,transparent)]" />
@@ -346,8 +354,12 @@ export function Events() {
                           {event.time && <div className="flex items-center space-x-2"><Clock className="h-4 w-4" style={{ color: "var(--accent-blue)" }} /><span>{event.time}</span></div>}
                           {event.location && <div className="flex items-center space-x-2"><MapPin className="h-4 w-4" style={{ color: "var(--accent-blue)" }} /><span className="truncate">{event.location}</span></div>}
                         </div>
-                        <div className="inline-flex w-full justify-center bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium transition-transform hover:scale-[1.02]">
-                          Register Now
+                        <div className={`inline-flex w-full justify-center px-4 py-2 rounded-lg text-sm font-medium transition-transform hover:scale-[1.02] ${
+                          isRegClosed
+                            ? "bg-red-500/15 text-red-400 border border-red-500/25 cursor-not-allowed"
+                            : "bg-primary text-primary-foreground"
+                        }`}>
+                          {isRegClosed ? "Registration Closed" : "Register Now"}
                         </div>
                         {navigatingId === event._id && (
                           <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/50 backdrop-blur-sm rounded-2xl">

@@ -40,6 +40,7 @@ export default function EventsAdminPage() {
   const [aTeamLabel, setATeamLabel] = useState("")
   const [aPrizePool, setAPrizePool] = useState<{position: string, amount: string}[]>([])
   const [aRegistrationStart, setARegistrationStart] = useState("")
+  const [aRegistrationClose, setARegistrationClose] = useState("")
   const [aWhatsAppLink, setAWhatsAppLink] = useState("")
 
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -56,6 +57,7 @@ export default function EventsAdminPage() {
   const [eTeamLabel, setETeamLabel] = useState("")
   const [ePrizePool, setEPrizePool] = useState<{position: string, amount: string}[]>([])
   const [eRegistrationStart, setERegistrationStart] = useState("")
+  const [eRegistrationClose, setERegistrationClose] = useState("")
   const [eWhatsAppLink, setEWhatsAppLink] = useState("")
 
   const [addCropOpen, setAddCropOpen] = useState(false)
@@ -107,6 +109,7 @@ export default function EventsAdminPage() {
       teamNameLabel: aTeamLabel.trim() || undefined,
       prizePool: aPrizePool.filter(p => p.position.trim() && p.amount.trim()),
       registrationStartTime: aRegistrationStart ? new Date(aRegistrationStart).toISOString() : null,
+      registrationCloseTime: aRegistrationClose ? new Date(aRegistrationClose).toISOString() : null,
       whatsappLink: aWhatsAppLink.trim() || undefined,
     }
 
@@ -140,6 +143,7 @@ export default function EventsAdminPage() {
       teamNameLabel: eTeamLabel.trim() || undefined,
       prizePool: ePrizePool.filter(p => p.position.trim() && p.amount.trim()),
       registrationStartTime: eRegistrationStart ? new Date(eRegistrationStart).toISOString() : null,
+      registrationCloseTime: eRegistrationClose ? new Date(eRegistrationClose).toISOString() : null,
       whatsappLink: eWhatsAppLink.trim() || undefined,
     }
 
@@ -196,6 +200,7 @@ export default function EventsAdminPage() {
     setATeamLabel("")
     setAPrizePool([])
     setARegistrationStart("")
+    setARegistrationClose("")
     setAWhatsAppLink("")
   }
   function resetEditForm() {
@@ -212,6 +217,7 @@ export default function EventsAdminPage() {
     setETeamLabel("")
     setEPrizePool([])
     setERegistrationStart("")
+    setERegistrationClose("")
     setEWhatsAppLink("")
   }
 
@@ -318,6 +324,15 @@ export default function EventsAdminPage() {
       setERegistrationStart(localStr)
     } else {
       setERegistrationStart("")
+    }
+
+    if (event.registrationCloseTime) {
+      const d = new Date(event.registrationCloseTime)
+      const pad = (n: number) => n.toString().padStart(2, '0')
+      const localStr = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+      setERegistrationClose(localStr)
+    } else {
+      setERegistrationClose("")
     }
     
     // Support legacy data structure
@@ -619,6 +634,21 @@ export default function EventsAdminPage() {
             <p className="text-xs text-muted-foreground">If set, users cannot register until this time.</p>
           </div>
 
+          {/* Registration Close Time */}
+          <div className="grid gap-2 sm:col-span-2">
+            <label htmlFor="a-reg-close" className="text-sm font-medium">
+              Registration Close Time (optional)
+            </label>
+            <input
+              id="a-reg-close"
+              type="datetime-local"
+              value={aRegistrationClose}
+              onChange={(e) => setARegistrationClose(e.target.value)}
+              className="glass rounded-md px-3 py-2"
+            />
+            <p className="text-xs text-muted-foreground">If set, registration will be closed after this time.</p>
+          </div>
+
 
           <div className="flex gap-2 sm:col-span-2">
             <Button onClick={addEvent} disabled={!addCanSave} className="bg-emerald-600 hover:bg-emerald-700">
@@ -882,6 +912,21 @@ export default function EventsAdminPage() {
                 className="glass rounded-md px-3 py-2"
               />
               <p className="text-xs text-muted-foreground">If set, users cannot register until this time.</p>
+            </div>
+
+            {/* Registration Close Time */}
+            <div className="grid gap-2 sm:col-span-2">
+              <label htmlFor="e-reg-close" className="text-sm font-medium">
+                Registration Close Time (optional)
+              </label>
+              <input
+                id="e-reg-close"
+                type="datetime-local"
+                value={eRegistrationClose}
+                onChange={(e) => setERegistrationClose(e.target.value)}
+                className="glass rounded-md px-3 py-2"
+              />
+              <p className="text-xs text-muted-foreground">If set, registration will be closed after this time.</p>
             </div>
           </div>
 
