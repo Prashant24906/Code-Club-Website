@@ -111,6 +111,7 @@ export default function RegistrationsPage({ params }: Props) {
             </Button>
             <h1 className="text-2xl font-bold">Registrations</h1>
             <h1 className="text-2xl font-bold">Total Registrations: {registrations.length}</h1>
+            <h1 className="text-2xl font-bold">Total Number of students: {registrations.reduce((total, reg) => total + (reg.teammates?.length || 0) + 1, 0)}</h1>
             <p className="text-muted-foreground">{eventTitle}</p>
           </div>
           <Button onClick={downloadCSV} disabled={loading || registrations.length === 0} className="shrink-0 gap-2">
