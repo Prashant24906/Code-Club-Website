@@ -741,37 +741,7 @@ export function EventDetailsClient({ event, onBack, backHref }: Props) {
                     </div>
                   ))}
                 </div>
-
-                <div className="pt-5 border-t border-border space-y-4">
-                  {isUpcoming ? (
-                    registered ? (
-                      <SuccessBanner />
-                    ) : event.googleFormLink ? (
-                      <button
-                        onClick={handleGoogleForm}
-                        className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground py-4 px-4 rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-xl shadow-primary/10 hover:shadow-primary/20 hover:opacity-90 transition-all"
-                      >
-                        Register Now
-                      </button>
-                    ) : (
-                      <button
-                        onClick={handleRegisterClick}
-                        disabled={checkingReg}
-                        className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground py-4 px-4 rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-xl shadow-primary/10 hover:shadow-primary/20 hover:opacity-90 transition-all disabled:opacity-60"
-                      >
-                        {checkingReg ? <Loader2 className="h-4 w-4 animate-spin" /> : "Register Now"}
-                      </button>
-                    )
-                  ) : (
-                    <p className="text-center text-sm text-muted-foreground py-2">This event has concluded.</p>
-                  )}
-
-                  {isUpcoming && (
-                    <p className="text-center text-[9px] uppercase font-bold tracking-[0.2em] text-muted-foreground/60 animate-pulse">
-                      Limited slots available
-                    </p>
-                  )}
-                </div>
+                
               </div>
             </div>
 
