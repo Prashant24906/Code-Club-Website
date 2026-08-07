@@ -139,27 +139,18 @@ export function Footer() {
           {/* Google Map column */}
           <div className="space-y-3">
             <h3 className="text-sm font-black uppercase tracking-widest text-foreground">Find Us</h3>
-            <div className="rounded-2xl overflow-hidden border" style={{ borderColor: "rgba(255,255,255,0.08)", height: "220px" }}>
-              <iframe
-                title="PES Modern College of Engineering Location"
-                src={MAPS_EMBED}
-                width="100%"
-                height="100%"
-                loading="lazy"
-                allowFullScreen
-                referrerPolicy="no-referrer-when-downgrade"
-                className="grayscale brightness-75 hover:grayscale-0 hover:brightness-100 transition-all duration-500"
-                style={{ border: 0 }}
-              />
-            </div>
-            <a
-              href="https://maps.app.goo.gl/8sQ6UkPsqkzrfbxU9"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-sky-400 hover:text-sky-300 transition-colors"
-            >
-              <ExternalLink size={11} /> Open in Google Maps
-            </a>
+            <div className="mt-4 overflow-hidden rounded-lg border border-white/10">
+                <iframe
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3783.059432658117!2d73.84392477501309!3d18.52619818256863!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bc2c088d031393d%3A0x3f92335c2e5c8400!2sP.E.S.%20Modern%20College%20of%20Engineering!5e0!3m2!1sen!2sin!4v1712001222416!5m2!1sen!2sin"
+                  width="100%"
+                  height="150"
+                  style={{ border: 0 }}
+                  allowFullScreen
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  title="PES Modern College of Engineering Location"
+                ></iframe>
+              </div>
           </div>
         </div>
       </div>

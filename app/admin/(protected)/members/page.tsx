@@ -30,6 +30,7 @@ type Member = {
   department: string
   image: string
   isHead: boolean
+  isCoreLeader?: boolean
 }
 
 const DEFAULT_DEPARTMENTS = [
@@ -54,6 +55,7 @@ export default function MembersAdminPage() {
   const [isUploading, setIsUploading] = useState(false)
   const [editIsUploading, setEditIsUploading] = useState(false)
   const [isHead, setIsHead] = useState(false)
+  const [isCoreLeader, setIsCoreLeader] = useState(false)
 
   const [editOpen, setEditOpen] = useState(false)
   const [editingMemberId, setEditingMemberId] = useState<string | null>(null)
@@ -64,6 +66,7 @@ export default function MembersAdminPage() {
   const [eCustomDept, setECustomDept] = useState("")
   const [eImage, setEImage] = useState<string | undefined>(undefined)
   const [eIsHead, setEIsHead] = useState(false)
+  const [eIsCoreLeader, setEIsCoreLeader] = useState(false)
 
   const [addCropOpen, setAddCropOpen] = useState(false)
   const [addCropSrc, setAddCropSrc] = useState<string | null>(null)
@@ -114,6 +117,7 @@ export default function MembersAdminPage() {
     setCustomDept("")
     setImage(undefined)
     setIsHead(false)
+    setIsCoreLeader(false)
   }
 
   async function addMember() {
@@ -142,7 +146,7 @@ export default function MembersAdminPage() {
         imageUrl = uploadData.url
       }
 
-      const newMember = { name: name.trim(), role: role.trim(), department: finalDept, image: imageUrl, isHead }
+      const newMember = { name: name.trim(), role: role.trim(), department: finalDept, image: imageUrl, isHead, isCoreLeader }
 
       const res = await fetch("/api/members", {
         method: "POST",
@@ -198,6 +202,7 @@ export default function MembersAdminPage() {
     setEDepartment(member.department || DEFAULT_DEPARTMENTS[0])
     setEImage(member.image)
     setEIsHead(member.isHead)
+    setEIsCoreLeader(member.isCoreLeader || false)
     setEAddingCustomDept(false)
     setECustomDept("")
     setEditOpen(true)
@@ -212,6 +217,7 @@ export default function MembersAdminPage() {
     setECustomDept("")
     setEImage(undefined)
     setEIsHead(false)
+    setEIsCoreLeader(false)
   }
 
   const saveEdit = async () => {
@@ -240,7 +246,7 @@ export default function MembersAdminPage() {
         imageUrl = uploadData.url
       }
 
-      const updatedMember = { name: eName.trim(), role: eRole.trim(), department: finalDept, image: imageUrl, isHead: eIsHead }
+      const updatedMember = { name: eName.trim(), role: eRole.trim(), department: finalDept, image: imageUrl, isHead: eIsHead, isCoreLeader: eIsCoreLeader }
 
       const res = await fetch("/api/members", {
         method: "PUT",
@@ -323,6 +329,9 @@ export default function MembersAdminPage() {
                       <div className="truncate text-xs text-muted-foreground/80">
                         {m.department || "—"} {m.isHead ? "• Head" : ""}
                       </div>
+                      <div className="truncate text-xs text-muted-foreground/80">
+                        {m.isCoreLeader ? "• Core Leader" : ""}
+                      </div>
                     </div>
                   </div>
                   <div className="mt-4 flex gap-2">
@@ -380,15 +389,27 @@ export default function MembersAdminPage() {
             {addingCustomDept && <Input value={customDept} onChange={(e) => setCustomDept(e.target.value)} placeholder="Type new department" className="glass" />}
           </div>
 
-          <div className="grid gap-2">
-            <Label>Department Head/Lead</Label>
-            <Select value={isHead ? "yes" : "no"} onValueChange={(v) => setIsHead(v === "yes")}>
-              <SelectTrigger className="glass"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="yes">Yes</SelectItem>
-                <SelectItem value="no">No</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-2">
+              <Label>Department Head/Lead</Label>
+              <Select value={isHead ? "yes" : "no"} onValueChange={(v) => setIsHead(v === "yes")}>
+                <SelectTrigger className="glass"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="yes">Yes</SelectItem>
+                  <SelectItem value="no">No</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label>Core Leader</Label>
+              <Select value={isCoreLeader ? "yes" : "no"} onValueChange={(v) => setIsCoreLeader(v === "yes")}>
+                <SelectTrigger className="glass"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="yes">Yes</SelectItem>
+                  <SelectItem value="no">No</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
 
@@ -446,15 +467,27 @@ export default function MembersAdminPage() {
               {eAddingCustomDept && <Input value={eCustomDept} onChange={(e) => setECustomDept(e.target.value)} placeholder="Type new department" className="glass" />}
             </div>
 
-            <div className="grid gap-2">
-              <Label>Department Head/Lead</Label>
-              <Select value={eIsHead ? "yes" : "no"} onValueChange={(v) => setEIsHead(v === "yes")}>
-                <SelectTrigger className="glass"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="yes">Yes</SelectItem>
-                  <SelectItem value="no">No</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-2">
+                <Label>Department Head/Lead</Label>
+                <Select value={eIsHead ? "yes" : "no"} onValueChange={(v) => setEIsHead(v === "yes")}>
+                  <SelectTrigger className="glass"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="yes">Yes</SelectItem>
+                    <SelectItem value="no">No</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label>Core Leader</Label>
+                <Select value={eIsCoreLeader ? "yes" : "no"} onValueChange={(v) => setEIsCoreLeader(v === "yes")}>
+                  <SelectTrigger className="glass"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="yes">Yes</SelectItem>
+                    <SelectItem value="no">No</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
 

@@ -155,6 +155,7 @@ export function Members() {
   const dept = departments[Math.min(selectedDeptIndex, departments.length - 1)];
   const cc = dept ? getColorClasses(dept.color) : getColorClasses("blue");
   const wheelItems = departments.map((d) => d.name);
+  const ExecutiveMembersDailogue = ["Vice President of CoDE Club, leading the executive team in executing the club's vision and initiatives.", "Secretary of CoDE Club, supporting the President and the executive team in executing the club's vision and initiatives.", "Joint Secretary of CoDE Club, supporting the President and the executive team in executing the club's vision and initiatives."]
 
   return (
     <section id="members" ref={sectionRef} className="py-20 px-4">
@@ -186,7 +187,7 @@ export function Members() {
             </div>
           )}
 
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-3 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 sm:gap-3 max-w-4xl mx-auto">
             {executiveMembers.map((member) => (
               <div key={member._id} className="glass-card rounded-2xl p-3 sm:p-3.5 h-full w-full hover:-translate-y-1.5 transition-transform duration-300">
                 <img src={member.image || "/placeholder.svg"} loading="lazy" alt={member.name} className="w-[130px] h-[130px] sm:w-[170px] sm:h-[170px] rounded-xl object-cover mb-3 mx-auto" />
@@ -194,7 +195,8 @@ export function Members() {
                   <div className="inline-flex text-center items-center rounded-full px-3 py-1 text-xs font-semibold bg-blue-500/10 text-blue-600 dark:text-blue-300">Executive Member</div>
                 </div>
                 <h4 className="text-base font-semibold text-foreground mb-1 text-center">{member.name}</h4>
-                <p className="text-xs text-muted-foreground text-center">{member.role}</p>
+                <p className="text-xs text-muted-foreground text-center mb-5">{member.role}</p>
+                <p className="text-sm text-foreground/85">{ExecutiveMembersDailogue.find((dialogue) => dialogue.includes(member.role))}</p>
               </div>
             ))}
           </div>

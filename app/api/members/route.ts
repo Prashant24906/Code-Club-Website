@@ -35,7 +35,7 @@ export async function PUT(request: Request) {
 
   await connectDB();
   const { id, ...data } = await request.json();
-  const updated = await Member.findByIdAndUpdate(id, data, { new: true });
+  const updated = await Member.findByIdAndUpdate(id, { $set: data }, { new: true, runValidators: true });
   return new Response(JSON.stringify(updated), { status: 200 });
 }
 

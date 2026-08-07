@@ -7,6 +7,7 @@ const memberSchema = new mongoose.Schema(
     role: String,
     department: String,
     isHead: { type: Boolean, default: false },
+    isCoreLeader: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

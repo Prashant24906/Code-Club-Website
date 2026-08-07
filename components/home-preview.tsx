@@ -148,6 +148,9 @@ function EventsPreview() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {events.map((ev) => {
               const imgs = ev.images?.length ? ev.images : ev.image ? [ev.image] : []
+              const isRegClosed = ev.registrationCloseTime 
+                ? new Date(ev.registrationCloseTime) < new Date()
+                : false
               return (
                 <Link
                   href={`/events/${ev._id}`}
@@ -169,12 +172,12 @@ function EventsPreview() {
                         </div>
                       )}
                       {imgs[0] ? (
-                        <div className="relative h-40 w-full overflow-hidden shrink-0">
+                        <div className="relative h-120 w-full overflow-hidden shrink-0">
                           <Image
                             src={imgs[0]}
                             alt={ev.title}
                             fill
-                            sizes="(max-width:768px) 100vw, 33vw"
+                            sizes="(max-width:768px) 100vw, 33vw "
                             className="object-cover group-hover:scale-105 transition-transform duration-500"
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
@@ -205,10 +208,17 @@ function EventsPreview() {
                         </div>
 
                         <div className="mt-4 pt-4 border-t border-white/5 flex items-center justify-between">
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest bg-sky-500/10 text-sky-400 border border-sky-500/20 group-hover:bg-sky-500/20 transition-colors">
-                            Register Now
+                          <span
+                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-colors ${isRegClosed
+                              ? "bg-red-600/20 text-gray-400 border border-gray-500/30 cursor-not-allowed"
+                              : "bg-sky-500/10 text-sky-400 border border-sky-500/20 hover:bg-sky-500/20"
+                              }`}
+                          >
+                            {isRegClosed ? "Registration Closed" : "Register Now"}
                           </span>
-                          <ArrowRight size={14} className="text-sky-400 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" />
+                          {!isRegClosed && (
+                            <ArrowRight size={14} className="text-sky-400 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" />
+                          )}
                         </div>
                       </div>
                     </div>
@@ -313,6 +323,9 @@ function MembersPreview() {
                 </div>
                 {m.isHead && (
                   <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full mb-1" style={{ background: "#38bdf820", color: "#38bdf8" }}>Head</span>
+                )}
+                {m.isCoreLeader && (
+                  <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full mb-1" style={{ background: "#38bdf820", color: "#38bdf8" }}>{m.role}</span>
                 )}
                 <p className="text-sm font-bold text-foreground leading-snug">{m.name}</p>
                 <p className="text-[11px] text-muted-foreground mt-0.5">{m.role}</p>
